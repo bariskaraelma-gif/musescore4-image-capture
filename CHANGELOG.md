@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3 — 2026-10-18
+
+- Linux: Ctrl + mouse wheel zooms the page view again (before, it only scrolled the page). Thanks to the Ubuntu 22.04 tester on the musescore.org forum.
+
 ## 1.3.2 — 2026-10-18
 
 - Linux: MuseScore no longer keeps running in the background after it is closed, once the plugin had been opened. The page preview was loaded asynchronously, which started a Qt image loader thread that blocked MuseScore's exit. Thanks to graffesmusic on the musescore.org forum for reporting it.

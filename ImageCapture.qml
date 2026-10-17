@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.2"
+    version: "1.3.3"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -1725,21 +1725,31 @@ MuseScore {
                 QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
                 QQC.ScrollBar.horizontal: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
 
-                // Ctrl + wheel: zoom towards the mouse pointer
-                WheelHandler {
-                    id: wheelZoom
-                    target: null
-                    acceptedModifiers: Qt.ControlModifier
-                    onWheel: function(event) {
-                        var p = wheelZoom.parent.mapToItem(flick, wheelZoom.point.position.x, wheelZoom.point.position.y)
-                        root.zoomAt(event.angleDelta.y > 0 ? 1.15 : 1 / 1.15, p.x, p.y)
-                    }
-                }
-
                 Item {
                     id: canvas
                     width: flick.contentWidth
                     height: flick.contentHeight
+
+                    // Ctrl + wheel: zoom towards the mouse pointer. A MouseArea inside the content
+                    // gets the wheel before the Flickable; a WheelHandler on the Flickable did not
+                    // on Linux (the page scrolled instead). Mouse buttons pass through.
+                    MouseArea {
+                        anchors.fill: parent
+                        z: 1000
+                        acceptedButtons: Qt.NoButton
+                        onWheel: function(wheel) {
+                            if (!(wheel.modifiers & Qt.ControlModifier)) {
+                                wheel.accepted = false            // plain wheel: Flickable scrolls
+                                return
+                            }
+                            var dy = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.pixelDelta.y
+                            if (dy !== 0) {
+                                var p = mapToItem(flick, wheel.x, wheel.y)
+                                root.zoomAt(dy > 0 ? 1.15 : 1 / 1.15, p.x, p.y)
+                            }
+                            wheel.accepted = true
+                        }
+                    }
 
                     // Drag helpers: the frame is changed directly in SVG units
                     // (the margin spin boxes are not touched)
