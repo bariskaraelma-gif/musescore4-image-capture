@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3 — 2026-10-17
+
+Linux and macOS support for TIFF, clipboard and PDF, following feedback from an Ubuntu tester on the musescore.org forum.
+
+- **TIFF:** ImageMagick (`magick` / `convert`) on Linux, `sips` on macOS.
+- **Copy to clipboard:** `wl-copy` (Wayland) or `xclip` (X11) on Linux, `osascript` on macOS.
+- **PDF:** `rsvg-convert` is tried first on Linux / macOS; the browser is only a fallback. This avoids the Ubuntu Chromium snap, which cannot write the output because of snap confinement.
+- If a helper tool is missing, the message shows which package to install.
+- Linux: `sudo apt install librsvg2-bin imagemagick wl-clipboard xclip`
+
 ## 1.2 — 2026-10-16
 
 - The plugin is now a direct entry in the **Plugins** menu, not inside a submenu.

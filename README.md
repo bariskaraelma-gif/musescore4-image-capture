@@ -29,8 +29,13 @@ Brings back MuseScore 3's **Image Capture** tool, which was removed in MuseScore
 ## Requirements
 
 - MuseScore **4.7** (developed and tested on 4.7.5).
-- **Windows** for full functionality. See [Limitations](#limitations).
-- **Microsoft Edge** or **Google Chrome** for PDF export. Edge comes with Windows.
+- **Windows:** nothing else needed. **Microsoft Edge** (comes with Windows) or **Google Chrome** is used for PDF export.
+- **Linux:** install the helper tools for PDF, TIFF and clipboard:
+  ```
+  sudo apt install librsvg2-bin imagemagick wl-clipboard xclip
+  ```
+  (`librsvg2-bin` → PDF, `imagemagick` → TIFF, `wl-clipboard` → clipboard on Wayland, `xclip` → clipboard on X11)
+- **macOS:** TIFF and clipboard use built-in tools (`sips`, `osascript`). For PDF install `librsvg` (`brew install librsvg`) or Google Chrome.
 
 ## Installation
 
@@ -61,8 +66,8 @@ The MuseScore 4 plugin API cannot draw the score directly, so the plugin:
 1. exports the score pages to temporary SVG files with `writeScore()`;
 2. crops the page SVG to the frame by changing its `viewBox` → **SVG**;
 3. renders the cropped SVG at the chosen resolution → **PNG / JPEG / clipboard**;
-4. converts that PNG with .NET `System.Drawing` (PowerShell) → **TIFF**;
-5. prints the cropped SVG with headless Microsoft Edge / Google Chrome → **PDF**.
+4. converts that PNG with .NET `System.Drawing` (PowerShell) → **TIFF** (Linux / macOS: ImageMagick / `sips`);
+5. prints the cropped SVG with headless Microsoft Edge / Google Chrome → **PDF** (Linux / macOS: `rsvg-convert` first, the browser only as a fallback).
 
 ### What the plugin runs on your computer
 
@@ -73,6 +78,7 @@ For transparency, the plugin uses these programs in the background:
   - copy images to the clipboard;
   - convert PNG to TIFF.
 - **Microsoft Edge / Google Chrome** in headless mode, with a separate temporary profile, to create PDFs.
+- On Linux / macOS instead of PowerShell: `/bin/sh` with `cp`, `rsvg-convert`, ImageMagick (`magick` / `convert`), `wl-copy` / `xclip`, `sips`, `osascript` — only the ones that are installed.
 
 No network access, no data collection. Temporary files are written to your temp folder.
 
@@ -80,8 +86,8 @@ No network access, no data collection. Temporary files are written to your temp 
 
 - Works in **Page view** only, not in Continuous view.
 - If a selection spans several pages, only the part on the first page is used.
-- **Copy to clipboard** and **TIFF** currently work on **Windows only**. The clipboard image has no transparency.
-- PNG, JPEG, SVG and PDF should also work on macOS / Linux, but this has not been tested.
+- The clipboard image has no transparency.
+- Linux and macOS support for PDF, TIFF and clipboard is new in v1.3 and has had little testing. Ubuntu's Chromium snap cannot be used for PDF (snap confinement), so install `librsvg2-bin`. With the Flatpak version of MuseScore, the helper tools on the host system may not be reachable.
 - A cropped SVG still contains the whole page outside the visible area, so its file size is that of the full page.
 
 ## About this project
@@ -143,7 +149,7 @@ MuseScore 4'te kaldırılan, MuseScore 3'teki **Görüntü Yakalama** aracını 
 
 - Yalnızca **sayfa görünümünde** çalışır.
 - Seçim birden fazla sayfaya yayılırsa yalnızca ilk sayfadaki kısım kullanılır.
-- **Panoya kopyala** ve **TIFF** şimdilik yalnızca **Windows**'ta çalışır.
+- Linux'ta PDF, TIFF ve pano için yardımcı araçlar gerekir: `sudo apt install librsvg2-bin imagemagick wl-clipboard xclip`. macOS'ta PDF için `brew install librsvg` veya Google Chrome gerekir.
 
 ### Bu proje hakkında
 

@@ -15,8 +15,10 @@
  *      element page positions); without one it frames the title and the first system.
  *   3. Crop the page SVG's viewBox to the frame                 -> SVG
  *   4. Render the cropped SVG at the requested DPI (grabToImage) -> PNG / JPEG / clipboard;
- *      TIFF = that PNG converted with System.Drawing (no TIFF plugin in MuseScore)
+ *      TIFF = that PNG converted with System.Drawing (Windows) or ImageMagick / sips
+ *      (Linux / macOS); clipboard: PowerShell, wl-copy / xclip, osascript
  *   5. Print the cropped SVG with headless Microsoft Edge/Chrome -> PDF
+ *      (Linux / macOS: rsvg-convert first, the browser only as a fallback)
  *
  * MuseScore 4.7 plugin API notes (why some things are done the way they are):
  *   - Only built-in QML modules load (QtQuick.Dialogs / Qt.labs.platform do not);
@@ -51,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.2"
+    version: "1.3"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -320,13 +322,14 @@ MuseScore {
             pngWriteFailed: "Could not write the %1.",
             pngGrabFailed: "Could not capture the image for the %1.",
             pngRenderFailed: "Could not render the SVG for the %1.",
-            clipWindowsOnly: "Copying to the clipboard is currently supported on Windows only.",
+            clipNoTool: "Copying to the clipboard needs wl-clipboard (Wayland) or xclip (X11). Install one, e.g. sudo apt install wl-clipboard xclip",
             clipCopying: "Copying to the clipboard...",
             clipDone: "Image copied to the clipboard (%1 dpi). You can paste it into Word, an e-mail, etc.",
             clipFailed: "Could not copy to the clipboard.",
-            tiffWindowsOnly: "TIFF export is currently supported on Windows only.",
+            tiffNoTool: "TIFF export needs ImageMagick (magick or convert). Install it, e.g. sudo apt install imagemagick",
+            makingPdfRsvg: "Creating PDF (rsvg-convert)...",
             tiffConverting: "Converting to TIFF...",
-            noBrowser: "PDF export needs Microsoft Edge or Google Chrome. Save as SVG and convert it with another program.",
+            noBrowser: "PDF export needs Microsoft Edge or Google Chrome. Save as SVG and convert it with another program. Linux: sudo apt install librsvg2-bin",
             prepPdf: "Preparing PDF...",
             makingPdf: "Creating PDF (Microsoft Edge is running in the background)...",
             pdfFailed: "The PDF could not be created (the browser produced no output)."
@@ -379,13 +382,14 @@ MuseScore {
             pngWriteFailed: "%1 yazılamadı.",
             pngGrabFailed: "%1 için görüntü yakalanamadı.",
             pngRenderFailed: "%1 için SVG render edilemedi.",
-            clipWindowsOnly: "Panoya kopyalama şimdilik yalnızca Windows'ta destekleniyor.",
+            clipNoTool: "Panoya kopyalamak için wl-clipboard (Wayland) veya xclip (X11) gerekli. Örn.: sudo apt install wl-clipboard xclip",
             clipCopying: "Panoya kopyalanıyor...",
             clipDone: "Görüntü panoya kopyalandı (%1 dpi). Word, e-posta vb. yere yapıştırabilirsiniz.",
             clipFailed: "Panoya kopyalanamadı.",
-            tiffWindowsOnly: "TIFF kaydetme şu anda yalnızca Windows'ta destekleniyor.",
+            tiffNoTool: "TIFF kaydetmek için ImageMagick (magick veya convert) gerekli. Örn.: sudo apt install imagemagick",
+            makingPdfRsvg: "PDF oluşturuluyor (rsvg-convert)...",
             tiffConverting: "TIFF'e dönüştürülüyor...",
-            noBrowser: "PDF için Microsoft Edge veya Google Chrome gerekli. SVG olarak kaydedip başka bir programla PDF'e çevirebilirsiniz.",
+            noBrowser: "PDF için Microsoft Edge veya Google Chrome gerekli. SVG olarak kaydedip başka bir programla PDF'e çevirebilirsiniz. Linux: sudo apt install librsvg2-bin",
             prepPdf: "PDF hazırlanıyor...",
             makingPdf: "PDF oluşturuluyor (Microsoft Edge arka planda çalışıyor)...",
             pdfFailed: "PDF oluşturulamadı (tarayıcı çıktı vermedi)."
@@ -438,13 +442,14 @@ MuseScore {
             pngWriteFailed: "Die %1-Datei konnte nicht geschrieben werden.",
             pngGrabFailed: "Das Bild für die %1-Datei konnte nicht erfasst werden.",
             pngRenderFailed: "Das SVG konnte für die %1-Datei nicht gerendert werden.",
-            clipWindowsOnly: "Das Kopieren in die Zwischenablage wird derzeit nur unter Windows unterstützt.",
+            clipNoTool: "Für die Zwischenablage wird wl-clipboard (Wayland) oder xclip (X11) benötigt, z. B.: sudo apt install wl-clipboard xclip",
             clipCopying: "Wird in die Zwischenablage kopiert...",
             clipDone: "Bild in die Zwischenablage kopiert (%1 dpi). Sie können es in Word, E-Mails usw. einfügen.",
             clipFailed: "Kopieren in die Zwischenablage fehlgeschlagen.",
-            tiffWindowsOnly: "TIFF-Export wird derzeit nur unter Windows unterstützt.",
+            tiffNoTool: "Für den TIFF-Export wird ImageMagick (magick oder convert) benötigt, z. B.: sudo apt install imagemagick",
+            makingPdfRsvg: "PDF wird erstellt (rsvg-convert)...",
             tiffConverting: "Wird in TIFF umgewandelt...",
-            noBrowser: "Für den PDF-Export wird Microsoft Edge oder Google Chrome benötigt. Speichern Sie als SVG und konvertieren Sie es mit einem anderen Programm.",
+            noBrowser: "Für den PDF-Export wird Microsoft Edge oder Google Chrome benötigt. Speichern Sie als SVG und konvertieren Sie es mit einem anderen Programm. Linux: sudo apt install librsvg2-bin",
             prepPdf: "PDF wird vorbereitet...",
             makingPdf: "PDF wird erstellt (Microsoft Edge läuft im Hintergrund)...",
             pdfFailed: "Die PDF-Datei konnte nicht erstellt werden (der Browser hat keine Ausgabe erzeugt)."
@@ -497,13 +502,14 @@ MuseScore {
             pngWriteFailed: "Impossible d'écrire le %1.",
             pngGrabFailed: "Impossible de capturer l'image pour le %1.",
             pngRenderFailed: "Impossible de générer le SVG pour le %1.",
-            clipWindowsOnly: "La copie dans le presse-papiers n'est actuellement prise en charge que sous Windows.",
+            clipNoTool: "La copie dans le presse-papiers nécessite wl-clipboard (Wayland) ou xclip (X11), p. ex. : sudo apt install wl-clipboard xclip",
             clipCopying: "Copie dans le presse-papiers...",
             clipDone: "Image copiée dans le presse-papiers (%1 dpi). Vous pouvez la coller dans Word, un e-mail, etc.",
             clipFailed: "Impossible de copier dans le presse-papiers.",
-            tiffWindowsOnly: "L'export TIFF n'est actuellement pris en charge que sous Windows.",
+            tiffNoTool: "L'export TIFF nécessite ImageMagick (magick ou convert), p. ex. : sudo apt install imagemagick",
+            makingPdfRsvg: "Création du PDF (rsvg-convert)...",
             tiffConverting: "Conversion en TIFF...",
-            noBrowser: "L'export PDF nécessite Microsoft Edge ou Google Chrome. Enregistrez en SVG et convertissez-le avec un autre programme.",
+            noBrowser: "L'export PDF nécessite Microsoft Edge ou Google Chrome. Enregistrez en SVG et convertissez-le avec un autre programme. Linux: sudo apt install librsvg2-bin",
             prepPdf: "Préparation du PDF...",
             makingPdf: "Création du PDF (Microsoft Edge s'exécute en arrière-plan)...",
             pdfFailed: "Impossible de créer le PDF (le navigateur n'a produit aucun fichier)."
@@ -556,13 +562,14 @@ MuseScore {
             pngWriteFailed: "No se pudo escribir el %1.",
             pngGrabFailed: "No se pudo capturar la imagen para el %1.",
             pngRenderFailed: "No se pudo renderizar el SVG para el %1.",
-            clipWindowsOnly: "Por ahora, copiar al portapapeles solo es compatible con Windows.",
+            clipNoTool: "Para copiar al portapapeles se necesita wl-clipboard (Wayland) o xclip (X11), p. ej.: sudo apt install wl-clipboard xclip",
             clipCopying: "Copiando al portapapeles...",
             clipDone: "Imagen copiada al portapapeles (%1 dpi). Puede pegarla en Word, un correo, etc.",
             clipFailed: "No se pudo copiar al portapapeles.",
-            tiffWindowsOnly: "La exportación TIFF solo es compatible con Windows por ahora.",
+            tiffNoTool: "La exportación TIFF necesita ImageMagick (magick o convert), p. ej.: sudo apt install imagemagick",
+            makingPdfRsvg: "Creando PDF (rsvg-convert)...",
             tiffConverting: "Convirtiendo a TIFF...",
-            noBrowser: "Para exportar a PDF se necesita Microsoft Edge o Google Chrome. Guarde como SVG y conviértalo con otro programa.",
+            noBrowser: "Para exportar a PDF se necesita Microsoft Edge o Google Chrome. Guarde como SVG y conviértalo con otro programa. Linux: sudo apt install librsvg2-bin",
             prepPdf: "Preparando PDF...",
             makingPdf: "Creando PDF (Microsoft Edge se está ejecutando en segundo plano)...",
             pdfFailed: "No se pudo crear el PDF (el navegador no generó ningún archivo)."
@@ -615,13 +622,14 @@ MuseScore {
             pngWriteFailed: "Não foi possível gravar o %1.",
             pngGrabFailed: "Não foi possível capturar a imagem para o %1.",
             pngRenderFailed: "Não foi possível renderizar o SVG para o %1.",
-            clipWindowsOnly: "Por enquanto, copiar para a área de transferência só funciona no Windows.",
+            clipNoTool: "Para copiar para a área de transferência é necessário o wl-clipboard (Wayland) ou o xclip (X11), ex.: sudo apt install wl-clipboard xclip",
             clipCopying: "Copiando para a área de transferência...",
             clipDone: "Imagem copiada para a área de transferência (%1 dpi). Você pode colá-la no Word, em um e-mail etc.",
             clipFailed: "Não foi possível copiar para a área de transferência.",
-            tiffWindowsOnly: "A exportação TIFF só é suportada no Windows por enquanto.",
+            tiffNoTool: "A exportação TIFF precisa do ImageMagick (magick ou convert), ex.: sudo apt install imagemagick",
+            makingPdfRsvg: "Criando PDF (rsvg-convert)...",
             tiffConverting: "Convertendo para TIFF...",
-            noBrowser: "Para exportar em PDF é necessário o Microsoft Edge ou o Google Chrome. Salve como SVG e converta com outro programa.",
+            noBrowser: "Para exportar em PDF é necessário o Microsoft Edge ou o Google Chrome. Salve como SVG e converta com outro programa. Linux: sudo apt install librsvg2-bin",
             prepPdf: "Preparando PDF...",
             makingPdf: "Criando PDF (o Microsoft Edge está sendo executado em segundo plano)...",
             pdfFailed: "Não foi possível criar o PDF (o navegador não gerou nenhum arquivo)."
@@ -1223,6 +1231,22 @@ MuseScore {
         return ["-NoProfile", "-NonInteractive", "-STA", "-ExecutionPolicy", "Bypass", "-Command", command]
     }
 
+    // Linux / macOS: runs a /bin/sh script with positional arguments ($1, $2, ...) and passes its
+    // exit code to onDone(code). 127 = no suitable tool found. The exit code is written to a
+    // status file because the QProcess signal does not report it. LD_LIBRARY_PATH is cleared so
+    // system tools are not broken by an AppImage's bundled libraries.
+    function runShell(script, args, from, to, expectMs, onDone) {
+        var statusPath = tmpFile("status", "txt")
+        removeFile(statusPath)
+        var wrapped = 'st="$1"; shift; unset LD_LIBRARY_PATH LD_PRELOAD; ( ' + script + ' ); echo $? > "$st"'
+        runAsync("/bin/sh", ["-c", wrapped, "sh", statusPath].concat(args), from, to, expectMs,
+                 function(ok) {
+                     var code = fileExists(statusPath) ? parseInt(String(readFile(statusPath)).trim(), 10) : -1
+                     removeFile(statusPath)
+                     onDone(ok && !isNaN(code) ? code : -1)
+                 })
+    }
+
     // Copies a temp file to the destination (async), deletes the temp file and reports the result
     function deliverAsync(tmpPath, dst, label, from) {
         if (!fileExists(tmpPath)) {
@@ -1260,10 +1284,6 @@ MuseScore {
     // so a PNG is written first and converted with System.Drawing (PowerShell).
     // fmt = "png", "jpg" or "tif"; thenClipboard = copy a PNG to the clipboard instead.
     function saveRaster(path, fmt, thenClipboard) {
-        if (fmt === "tif" && !thenClipboard && Qt.platform.os !== "windows") {
-            setStatus("tiffWindowsOnly")
-            return
-        }
         var label = formatLabel(fmt)
         startBusy(thenClipboard ? "makingClip" : "makingPng", [label])
         var r = cropRect()
@@ -1313,33 +1333,64 @@ MuseScore {
 
     // PNG -> TIFF with System.Drawing; writes straight to the destination (PowerShell is not
     // limited like FileIO) and stores the chosen resolution in the TIFF header.
+    // Linux / macOS: ImageMagick (magick or convert), or sips on macOS.
     function convertToTiff(pngPath, dst) {
         setProgress(0.6, "tiffConverting")
         var before = mtime(dst)
+        var done = function(ok) {
+            removeFile(pngPath)
+            var after = mtime(dst)
+            if (ok && after >= 0 && (before < 0 || after !== before
+                                     || Math.abs(Date.now() / 1000 - after) <= 5)) {
+                finishBusy("saved", ["TIFF", nativePath(dst)])
+            } else {
+                failBusy("createFailed", ["TIFF"])
+            }
+        }
+        if (Qt.platform.os !== "windows") {
+            runShell('if command -v magick >/dev/null 2>&1; then magick "$1" -units PixelsPerInch -density "$3" "$2";'
+                     + ' elif command -v convert >/dev/null 2>&1; then convert "$1" -units PixelsPerInch -density "$3" "$2";'
+                     + ' elif command -v sips >/dev/null 2>&1; then sips -s format tiff -s dpiWidth "$3" -s dpiHeight "$3" "$1" --out "$2" >/dev/null;'
+                     + ' else exit 127; fi',
+                     [pngPath, dst, String(pngDpi)], 0.6, 0.97, 1500,
+                     function(code) {
+                         if (code === 127) {
+                             removeFile(pngPath)
+                             failBusy("tiffNoTool")
+                         } else {
+                             done(code === 0)
+                         }
+                     })
+            return
+        }
         runAsync("powershell.exe",
                  psArgs("Add-Type -AssemblyName System.Drawing;"
                         + "$b=New-Object System.Drawing.Bitmap(" + psQuote(pngPath) + ");"
                         + "$b.SetResolution(" + pngDpi + "," + pngDpi + ");"
                         + "$b.Save(" + psQuote(dst) + ",[System.Drawing.Imaging.ImageFormat]::Tiff);$b.Dispose()"),
-                 0.6, 0.97, 1500,
-                 function(ok) {
-                     removeFile(pngPath)
-                     var after = mtime(dst)
-                     if (ok && after >= 0 && (before < 0 || after !== before
-                                              || Math.abs(Date.now() / 1000 - after) <= 5)) {
-                         finishBusy("saved", ["TIFF", nativePath(dst)])
-                     } else {
-                         failBusy("createFailed", ["TIFF"])
-                     }
-                 })
+                 0.6, 0.97, 1500, done)
     }
 
+    // Linux: wl-copy (Wayland) or xclip (X11); macOS: osascript. Both clipboard tools fork and
+    // keep serving the clipboard in the background after reading the whole file.
     function copyPngToClipboard(pngPath) {
+        setProgress(0.6, "clipCopying")
         if (Qt.platform.os !== "windows") {
-            failBusy("clipWindowsOnly")
+            runShell('if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
+                     + ' elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -t image/png -i "$1" >/dev/null 2>&1;'
+                     + ' elif command -v osascript >/dev/null 2>&1; then osascript -e "set the clipboard to (read (POSIX file \\"$1\\") as «class PNGf»)";'
+                     + ' else exit 127; fi',
+                     [pngPath], 0.6, 0.97, 800,
+                     function(code) {
+                         removeFile(pngPath)
+                         if (code === 0) {
+                             finishBusy("clipDone", [pngDpi])
+                         } else {
+                             failBusy(code === 127 ? "clipNoTool" : "clipFailed")
+                         }
+                     })
             return
         }
-        setProgress(0.6, "clipCopying")
         runAsync("powershell.exe",
                  psArgs("Add-Type -AssemblyName System.Windows.Forms,System.Drawing;"
                         + "$img=[System.Drawing.Image]::FromFile(" + psQuote(pngPath) + ");"
@@ -1375,10 +1426,44 @@ MuseScore {
     // PDF: embeds the cropped SVG in an HTML page whose page size is exactly the frame and prints
     // it with headless Edge/Chrome. The browser is not limited like FileIO, so it writes the PDF
     // straight to the destination (no extra copy step).
+    // Linux / macOS: rsvg-convert (librsvg) is tried first; it needs no browser and is not affected
+    // by snap confinement (Ubuntu's Chromium snap cannot read /tmp or write outside $HOME).
     function savePdf(path) {
+        if (Qt.platform.os === "windows") {
+            savePdfBrowser(path)
+            return
+        }
+        startBusy("prepPdf")
+        var svgPath = tmpFile("pdfsrc", "svg")
+        writeFile(svgPath, buildCroppedSvg(true))
+        var before = mtime(path)
+        setProgress(0.1, "makingPdfRsvg")
+        runShell('command -v rsvg-convert >/dev/null 2>&1 || exit 127; rsvg-convert -f pdf -o "$2" "$1"',
+                 [svgPath, path], 0.1, 0.97, 1000,
+                 function(code) {
+                     removeFile(svgPath)
+                     if (code === 127) {
+                         savePdfBrowser(path)
+                         return
+                     }
+                     var after = mtime(path)
+                     if (code === 0 && after >= 0 && (before < 0 || after !== before
+                                                       || Math.abs(Date.now() / 1000 - after) <= 5)) {
+                         finishBusy("saved", ["PDF", nativePath(path)])
+                     } else {
+                         failBusy("pdfFailed")
+                     }
+                 })
+    }
+
+    function savePdfBrowser(path) {
         var browser = findBrowser()
         if (!browser) {
-            setStatus("noBrowser")
+            if (busy) {
+                failBusy("noBrowser")
+            } else {
+                setStatus("noBrowser")
+            }
             return
         }
         startBusy("prepPdf")
