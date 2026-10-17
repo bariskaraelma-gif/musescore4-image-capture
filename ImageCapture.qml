@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3"
+    version: "1.3.1"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -1348,11 +1348,13 @@ MuseScore {
             }
         }
         if (Qt.platform.os !== "windows") {
-            runShell('if command -v magick >/dev/null 2>&1; then magick "$1" -units PixelsPerInch -density "$3" "$2";'
-                     + ' elif command -v convert >/dev/null 2>&1; then convert "$1" -units PixelsPerInch -density "$3" "$2";'
+            // -type forces 8-bit RGB(A): otherwise ImageMagick writes a grayscale / palette TIFF
+            // for black-and-white music, which some viewers (GNOME Loupe) cannot open.
+            runShell('if command -v magick >/dev/null 2>&1; then magick "$1" -units PixelsPerInch -density "$3" -depth 8 -type "$4" "$2";'
+                     + ' elif command -v convert >/dev/null 2>&1; then convert "$1" -units PixelsPerInch -density "$3" -depth 8 -type "$4" "$2";'
                      + ' elif command -v sips >/dev/null 2>&1; then sips -s format tiff -s dpiWidth "$3" -s dpiHeight "$3" "$1" --out "$2" >/dev/null;'
                      + ' else exit 127; fi',
-                     [pngPath, dst, String(pngDpi)], 0.6, 0.97, 1500,
+                     [pngPath, dst, String(pngDpi), transparentBg ? "TrueColorAlpha" : "TrueColor"], 0.6, 0.97, 1500,
                      function(code) {
                          if (code === 127) {
                              removeFile(pngPath)

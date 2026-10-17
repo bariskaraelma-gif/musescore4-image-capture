@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 — 2026-10-17
+
+- Linux / macOS TIFF: ImageMagick now always writes 8-bit RGB (or RGBA with a transparent background). Before, it could write a grayscale / palette TIFF that GNOME's image viewer (Loupe) could not open. Thanks to the Ubuntu tester on the musescore.org forum, who also confirmed that clipboard, SVG, PNG, PDF, JPEG and TIFF work on Ubuntu.
+
 ## 1.3 — 2026-10-17
 
 Linux and macOS support for TIFF, clipboard and PDF, following feedback from an Ubuntu tester on the musescore.org forum.

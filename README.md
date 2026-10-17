@@ -87,7 +87,7 @@ No network access, no data collection. Temporary files are written to your temp 
 - Works in **Page view** only, not in Continuous view.
 - If a selection spans several pages, only the part on the first page is used.
 - The clipboard image has no transparency.
-- Linux and macOS support for PDF, TIFF and clipboard is new in v1.3 and has had little testing. Ubuntu's Chromium snap cannot be used for PDF (snap confinement), so install `librsvg2-bin`. With the Flatpak version of MuseScore, the helper tools on the host system may not be reachable.
+- Linux support for PDF, TIFF and clipboard is new in v1.3 and has been confirmed on Ubuntu; macOS has not been tested yet. Ubuntu's Chromium snap cannot be used for PDF (snap confinement), so install `librsvg2-bin`. With the Flatpak version of MuseScore, the helper tools on the host system may not be reachable.
 - A cropped SVG still contains the whole page outside the visible area, so its file size is that of the full page.
 
 ## About this project
