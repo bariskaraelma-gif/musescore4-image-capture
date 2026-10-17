@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.1"
+    version: "1.3.2"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -1796,7 +1796,9 @@ MuseScore {
                         width: root.svgPageW * root.k
                         height: root.svgPageH * root.k
                         cache: false
-                        asynchronous: true
+                        // Synchronous on purpose: an asynchronous Image starts Qt's pixmap reader
+                        // thread, which on Linux keeps MuseScore from exiting after it is closed
+                        asynchronous: false
                         smooth: true
                         fillMode: Image.Stretch
                         // Sharp at screen resolution; capped at 8192 px to avoid huge textures

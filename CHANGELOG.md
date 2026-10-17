@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2 — 2026-10-18
+
+- Linux: MuseScore no longer keeps running in the background after it is closed, once the plugin had been opened. The page preview was loaded asynchronously, which started a Qt image loader thread that blocked MuseScore's exit. Thanks to graffesmusic on the musescore.org forum for reporting it.
+
 ## 1.3.1 — 2026-10-17
 
 - Linux / macOS TIFF: ImageMagick now always writes 8-bit RGB (or RGBA with a transparent background). Before, it could write a grayscale / palette TIFF that GNOME's image viewer (Loupe) could not open. Thanks to the Ubuntu tester on the musescore.org forum, who also confirmed that clipboard, SVG, PNG, PDF, JPEG and TIFF work on Ubuntu.
