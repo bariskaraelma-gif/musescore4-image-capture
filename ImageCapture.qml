@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.4"
+    version: "1.3.5"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -88,7 +88,8 @@ MuseScore {
     property var baseRect: null          // frame without margins (spatium, page coordinates)
     property var defaultBaseRect: null   // initial frame (selection or title + first system)
     property int defaultPage: 0          // page of the initial frame
-    property bool wholePageMode: false   // frame covers the whole page -> button offers "Default frame"
+    property string frameMode: "default" // capture area: "default", "page" (whole page) or "custom"
+    property var customFrame: null       // last area drawn / adjusted by the user: { page, rect }
     property string previewPath: ""
     property int previewSerial: 0
     property bool ready: false
@@ -115,7 +116,20 @@ MuseScore {
     readonly property real viewPad: 24
     property string tool: "select"       // "select" = draw / move (default), "hand" = pan the page
 
-    onZoomChanged: renderTimer.restart()
+    onZoomChanged: {
+        renderTimer.restart()
+        // Zoom changed elsewhere (buttons, wheel) while the % field has focus: show the new value
+        if (zoomField.activeFocus && !zoomField.edited && !zoomField.applying) {
+            zoomField.text = Qt.binding(function() { return root.zoomText })
+        }
+    }
+
+    // A press in the viewer takes the focus away from the % field
+    function releaseZoomField() {
+        if (zoomField.activeFocus) {
+            zoomField.apply()
+        }
+    }
 
     // Pending PNG render request
     property var pendingPng: null
@@ -277,17 +291,20 @@ MuseScore {
         en: {
             madeWith: "made with Claude",
             pct: "%1%",
-            help: "Drag the blue frame from inside to move it; drag its edges and corners to fine-tune.  Dragging outside the frame — Hand: scrolls the page, Select: draws a new rectangle.  Ctrl + wheel: zoom in / out.",
+            help: "Drag the blue capture area from inside to move it; drag its edges and corners to fine-tune.  Dragging outside the area — Hand: scrolls the page, Select: draws a new area.  Ctrl + wheel: zoom in / out.",
             language: "Language:",
             toolHand: "Hand",
             toolSelect: "Select",
+            zoomLabel: "Zoom:",
             fitPage: "Fit page",
-            fitFrame: "Fit frame",
+            fitArea: "Fit area",
             wholePage: "Whole page",
-            defaultFrame: "Default frame",
+            areaLabel: "Capture area:",
+            areaDefault: "Default",
+            areaCustom: "Custom",
             pageOf: "Page %1 / %2",
             noPreview: "No preview",
-            frameInfo: "Frame: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
+            frameInfo: "Area: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
             margins: "Margins (sp):",
             marginTop: "Top",
             marginBottom: "Bottom",
@@ -309,8 +326,8 @@ MuseScore {
             errExportMissing: "Exported SVG not found: %1",
             errPageInfo: "Could not read the page information.",
             errContinuous: "Please switch to Page view (View > Page view) and run the plugin again.",
-            infoNoSelection: "No selection: the title and the first system are framed. Drag the frame from inside to move it, drag its edges to fine-tune.",
-            infoNotRange: "Only a range selection (measures) sets the frame, so the title and the first system are framed. Drag the frame from inside to move it, drag its edges to fine-tune.",
+            infoNoSelection: "No selection: the capture area covers the title and the first system. Drag the area from inside to move it, drag its edges to fine-tune.",
+            infoNotRange: "Only a range selection (measures) sets the capture area, so it covers the title and the first system. Drag the area from inside to move it, drag its edges to fine-tune.",
             prepSvg: "Preparing SVG...",
             copying: "Copying %1 to the destination folder...",
             saved: "%1 saved: %2",
@@ -338,17 +355,20 @@ MuseScore {
         tr: {
             madeWith: "Claude ile yapıldı",
             pct: "%%1",
-            help: "Mavi çerçeveyi içinden tutup taşıyın, kenar ve köşelerinden sürükleyerek ince ayar yapın.  Çerçeve dışında sürükleme — El: sayfayı kaydırır, Seç: yeni dikdörtgen çizer.  Ctrl + tekerlek: yakınlaştır / uzaklaştır.",
+            help: "Mavi yakalama alanını içinden tutup taşıyın, kenar ve köşelerinden sürükleyerek ince ayar yapın.  Alanın dışında sürükleme — El: sayfayı kaydırır, Seç: yeni bir alan çizer.  Ctrl + tekerlek: yakınlaştır / uzaklaştır.",
             language: "Dil:",
             toolHand: "El",
             toolSelect: "Seç",
+            zoomLabel: "Yakınlaştırma:",
             fitPage: "Sayfaya sığdır",
-            fitFrame: "Çerçeveye sığdır",
+            fitArea: "Alana sığdır",
             wholePage: "Tüm sayfa",
-            defaultFrame: "Varsayılan çerçeve",
+            areaLabel: "Yakalama alanı:",
+            areaDefault: "Varsayılan",
+            areaCustom: "Özel",
             pageOf: "Sayfa %1 / %2",
             noPreview: "Önizleme yok",
-            frameInfo: "Çerçeve: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
+            frameInfo: "Alan: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
             margins: "Boşluklar (sp):",
             marginTop: "Üst",
             marginBottom: "Alt",
@@ -370,8 +390,8 @@ MuseScore {
             errExportMissing: "Dışa aktarılan SVG bulunamadı: %1",
             errPageInfo: "Sayfa bilgisi okunamadı.",
             errContinuous: "Lütfen Sayfa görünümüne geçin (Görünüm > Sayfa görünümü) ve plugin'i yeniden çalıştırın.",
-            infoNoSelection: "Seçim yok: başlık ve ilk sistem çerçevelendi. Çerçeveyi içinden tutup taşıyın, kenarlarından ince ayar yapın.",
-            infoNotRange: "Çerçeveyi yalnızca ölçü aralığı seçimi belirler; bu yüzden başlık ve ilk sistem çerçevelendi. Çerçeveyi içinden tutup taşıyın, kenarlarından ince ayar yapın.",
+            infoNoSelection: "Seçim yok: yakalama alanı başlığı ve ilk sistemi kapsıyor. Alanı içinden tutup taşıyın, kenarlarından ince ayar yapın.",
+            infoNotRange: "Yakalama alanını yalnızca ölçü aralığı seçimi belirler; bu yüzden alan başlığı ve ilk sistemi kapsıyor. Alanı içinden tutup taşıyın, kenarlarından ince ayar yapın.",
             prepSvg: "SVG hazırlanıyor...",
             copying: "%1 hedef klasöre kopyalanıyor...",
             saved: "%1 kaydedildi: %2",
@@ -399,17 +419,20 @@ MuseScore {
         de: {
             madeWith: "mit Claude erstellt",
             pct: "%1 %",
-            help: "Ziehen Sie den blauen Rahmen von innen, um ihn zu verschieben; ziehen Sie an Kanten und Ecken zur Feinabstimmung.  Ziehen außerhalb des Rahmens — Hand: verschiebt die Seite, Auswahl: zeichnet ein neues Rechteck.  Strg + Mausrad: vergrößern / verkleinern.",
+            help: "Ziehen Sie den blauen Aufnahmebereich von innen, um ihn zu verschieben; ziehen Sie an Kanten und Ecken zur Feinabstimmung.  Ziehen außerhalb des Bereichs — Hand: verschiebt die Seite, Auswahl: zeichnet einen neuen Bereich.  Strg + Mausrad: vergrößern / verkleinern.",
             language: "Sprache:",
             toolHand: "Hand",
             toolSelect: "Auswahl",
+            zoomLabel: "Zoom:",
             fitPage: "Seite einpassen",
-            fitFrame: "Rahmen einpassen",
+            fitArea: "Bereich einpassen",
             wholePage: "Ganze Seite",
-            defaultFrame: "Standardrahmen",
+            areaLabel: "Aufnahmebereich:",
+            areaDefault: "Standard",
+            areaCustom: "Eigener",
             pageOf: "Seite %1 / %2",
             noPreview: "Keine Vorschau",
-            frameInfo: "Rahmen: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
+            frameInfo: "Bereich: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
             margins: "Ränder (sp):",
             marginTop: "Oben",
             marginBottom: "Unten",
@@ -431,8 +454,8 @@ MuseScore {
             errExportMissing: "Exportierte SVG-Datei nicht gefunden: %1",
             errPageInfo: "Die Seiteninformationen konnten nicht gelesen werden.",
             errContinuous: "Bitte wechseln Sie zur Seitenansicht (Ansicht > Seitenansicht) und starten Sie das Plugin erneut.",
-            infoNoSelection: "Keine Auswahl: Titel und erstes System sind eingerahmt. Verschieben Sie den Rahmen von innen und passen Sie ihn an den Kanten an.",
-            infoNotRange: "Nur eine Bereichsauswahl (Takte) bestimmt den Rahmen, daher sind Titel und erstes System eingerahmt. Verschieben Sie den Rahmen von innen und passen Sie ihn an den Kanten an.",
+            infoNoSelection: "Keine Auswahl: Der Aufnahmebereich umfasst Titel und erstes System. Verschieben Sie den Bereich von innen und passen Sie ihn an den Kanten an.",
+            infoNotRange: "Nur eine Bereichsauswahl (Takte) bestimmt den Aufnahmebereich, daher umfasst er Titel und erstes System. Verschieben Sie den Bereich von innen und passen Sie ihn an den Kanten an.",
             prepSvg: "SVG wird vorbereitet...",
             copying: "%1 wird in den Zielordner kopiert...",
             saved: "%1 gespeichert: %2",
@@ -460,17 +483,20 @@ MuseScore {
         fr: {
             madeWith: "réalisé avec Claude",
             pct: "%1 %",
-            help: "Faites glisser le cadre bleu par l'intérieur pour le déplacer ; tirez sur ses bords et ses coins pour l'ajuster.  En dehors du cadre — Main : fait défiler la page, Sélection : trace un nouveau rectangle.  Ctrl + molette : zoom avant / arrière.",
+            help: "Faites glisser la zone de capture bleue par l'intérieur pour la déplacer ; tirez sur ses bords et ses coins pour l'ajuster.  En dehors de la zone — Main : fait défiler la page, Sélection : trace une nouvelle zone.  Ctrl + molette : zoom avant / arrière.",
             language: "Langue :",
             toolHand: "Main",
             toolSelect: "Sélection",
+            zoomLabel: "Zoom :",
             fitPage: "Ajuster à la page",
-            fitFrame: "Ajuster au cadre",
+            fitArea: "Ajuster à la zone",
             wholePage: "Page entière",
-            defaultFrame: "Cadre par défaut",
+            areaLabel: "Zone de capture :",
+            areaDefault: "Par défaut",
+            areaCustom: "Personnalisée",
             pageOf: "Page %1 / %2",
             noPreview: "Aucun aperçu",
-            frameInfo: "Cadre : %1 × %2 mm  —  @%3 dpi : %4 × %5 px",
+            frameInfo: "Zone : %1 × %2 mm  —  @%3 dpi : %4 × %5 px",
             margins: "Marges (sp) :",
             marginTop: "Haut",
             marginBottom: "Bas",
@@ -492,8 +518,8 @@ MuseScore {
             errExportMissing: "Fichier SVG exporté introuvable : %1",
             errPageInfo: "Impossible de lire les informations de la page.",
             errContinuous: "Veuillez passer en vue Page (Affichage > Vue Page) puis relancer le plugin.",
-            infoNoSelection: "Aucune sélection : le titre et le premier système sont encadrés. Déplacez le cadre par l'intérieur et ajustez-le par les bords.",
-            infoNotRange: "Seule une sélection de plage (mesures) définit le cadre ; le titre et le premier système sont donc encadrés. Déplacez le cadre par l'intérieur et ajustez-le par les bords.",
+            infoNoSelection: "Aucune sélection : la zone de capture couvre le titre et le premier système. Déplacez la zone par l'intérieur et ajustez-la par les bords.",
+            infoNotRange: "Seule une sélection de plage (mesures) définit la zone de capture ; elle couvre donc le titre et le premier système. Déplacez la zone par l'intérieur et ajustez-la par les bords.",
             prepSvg: "Préparation du SVG...",
             copying: "Copie du %1 vers le dossier de destination...",
             saved: "%1 enregistré : %2",
@@ -521,17 +547,20 @@ MuseScore {
         es: {
             madeWith: "hecho con Claude",
             pct: "%1 %",
-            help: "Arrastre el marco azul desde dentro para moverlo; arrastre sus bordes y esquinas para ajustarlo.  Fuera del marco — Mano: desplaza la página, Selección: dibuja un nuevo rectángulo.  Ctrl + rueda: acercar / alejar.",
+            help: "Arrastre el área de captura azul desde dentro para moverla; arrastre sus bordes y esquinas para ajustarla.  Fuera del área — Mano: desplaza la página, Selección: dibuja un área nueva.  Ctrl + rueda: acercar / alejar.",
             language: "Idioma:",
             toolHand: "Mano",
             toolSelect: "Selección",
+            zoomLabel: "Zoom:",
             fitPage: "Ajustar a la página",
-            fitFrame: "Ajustar al marco",
+            fitArea: "Ajustar al área",
             wholePage: "Página completa",
-            defaultFrame: "Marco predeterminado",
+            areaLabel: "Área de captura:",
+            areaDefault: "Predeterminada",
+            areaCustom: "Personalizada",
             pageOf: "Página %1 / %2",
             noPreview: "Sin vista previa",
-            frameInfo: "Marco: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
+            frameInfo: "Área: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
             margins: "Márgenes (sp):",
             marginTop: "Arriba",
             marginBottom: "Abajo",
@@ -553,8 +582,8 @@ MuseScore {
             errExportMissing: "No se encontró el SVG exportado: %1",
             errPageInfo: "No se pudo leer la información de la página.",
             errContinuous: "Cambie a la vista de página (Ver > Vista de página) y vuelva a ejecutar el complemento.",
-            infoNoSelection: "Sin selección: se enmarcaron el título y el primer sistema. Mueva el marco arrastrándolo desde dentro y ajústelo por los bordes.",
-            infoNotRange: "Solo una selección de rango (compases) define el marco, así que se enmarcaron el título y el primer sistema. Mueva el marco arrastrándolo desde dentro y ajústelo por los bordes.",
+            infoNoSelection: "Sin selección: el área de captura cubre el título y el primer sistema. Mueva el área arrastrándola desde dentro y ajústela por los bordes.",
+            infoNotRange: "Solo una selección de rango (compases) define el área de captura, así que cubre el título y el primer sistema. Mueva el área arrastrándola desde dentro y ajústela por los bordes.",
             prepSvg: "Preparando SVG...",
             copying: "Copiando %1 a la carpeta de destino...",
             saved: "%1 guardado: %2",
@@ -582,17 +611,20 @@ MuseScore {
         pt: {
             madeWith: "feito com Claude",
             pct: "%1%",
-            help: "Arraste a moldura azul por dentro para movê-la; arraste as bordas e os cantos para ajustá-la.  Fora da moldura — Mão: rola a página, Seleção: desenha um novo retângulo.  Ctrl + roda do mouse: aproximar / afastar.",
+            help: "Arraste a área de captura azul por dentro para movê-la; arraste as bordas e os cantos para ajustá-la.  Fora da área — Mão: rola a página, Seleção: desenha uma nova área.  Ctrl + roda do mouse: aproximar / afastar.",
             language: "Idioma:",
             toolHand: "Mão",
             toolSelect: "Seleção",
+            zoomLabel: "Zoom:",
             fitPage: "Ajustar à página",
-            fitFrame: "Ajustar à moldura",
+            fitArea: "Ajustar à área",
             wholePage: "Página inteira",
-            defaultFrame: "Moldura padrão",
+            areaLabel: "Área de captura:",
+            areaDefault: "Padrão",
+            areaCustom: "Personalizada",
             pageOf: "Página %1 / %2",
             noPreview: "Sem pré-visualização",
-            frameInfo: "Moldura: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
+            frameInfo: "Área: %1 × %2 mm  —  @%3 dpi: %4 × %5 px",
             margins: "Margens (sp):",
             marginTop: "Topo",
             marginBottom: "Base",
@@ -614,8 +646,8 @@ MuseScore {
             errExportMissing: "SVG exportado não encontrado: %1",
             errPageInfo: "Não foi possível ler as informações da página.",
             errContinuous: "Mude para a visualização de página (Exibir > Visualização de página) e execute o plugin novamente.",
-            infoNoSelection: "Sem seleção: o título e o primeiro sistema foram enquadrados. Mova a moldura arrastando por dentro e ajuste-a pelas bordas.",
-            infoNotRange: "Só uma seleção de intervalo (compassos) define a moldura, por isso o título e o primeiro sistema foram enquadrados. Mova a moldura arrastando por dentro e ajuste-a pelas bordas.",
+            infoNoSelection: "Sem seleção: a área de captura cobre o título e o primeiro sistema. Mova a área arrastando por dentro e ajuste-a pelas bordas.",
+            infoNotRange: "Só uma seleção de intervalo (compassos) define a área de captura, por isso ela cobre o título e o primeiro sistema. Mova a área arrastando por dentro e ajuste-a pelas bordas.",
             prepSvg: "Preparando SVG...",
             copying: "Copiando %1 para a pasta de destino...",
             saved: "%1 salvo: %2",
@@ -890,12 +922,33 @@ MuseScore {
         }
         defaultPage = currentPage
         defaultBaseRect = Object.assign({}, baseRect)
+        frameMode = "default"
     }
 
     // Frame covering the whole current page
     function setWholePage() {
         setCropSvg({ x: 0, y: 0, w: svgPageW, h: svgPageH })
-        wholePageMode = true
+        frameMode = "page"
+    }
+
+    // The user drew or adjusted the frame: remember it for the "Custom" button
+    function markCustomFrame() {
+        frameMode = "custom"
+        customFrame = { page: currentPage, rect: Object.assign({}, baseRect) }
+    }
+
+    // Back to the area last drawn / adjusted by the user
+    function restoreCustomFrame() {
+        if (!customFrame || customFrame.page >= pageCount) {
+            return
+        }
+        if (currentPage !== customFrame.page) {
+            showPage(customFrame.page, true)
+        }
+        baseRect = Object.assign({}, customFrame.rect)
+        frameMode = "custom"
+        refreshPreview()
+        Qt.callLater(fitCrop)
     }
 
     // Back to the initial frame (selection, or title + first system)
@@ -907,7 +960,7 @@ MuseScore {
             showPage(defaultPage, true)
         }
         baseRect = Object.assign({}, defaultBaseRect)
-        wholePageMode = false
+        frameMode = "default"
         refreshPreview()
         Qt.callLater(fitCropInitial)
     }
@@ -1005,7 +1058,6 @@ MuseScore {
     // Sets the frame to a rectangle in SVG units (the current margins are kept)
     function setCropSvg(r) {
         var u = unitsPerSp
-        wholePageMode = false
         baseRect = {
             x1: r.x / u + marginLeft,
             x2: (r.x + r.w) / u - marginRight,
@@ -1042,12 +1094,13 @@ MuseScore {
 
     // Crops the page SVG to the given rectangle (SVG units)
     function buildSvg(r, transparent) {
-        var s = pageSvg
-
-        if (transparent) {
-            // White page background that MuseScore writes first
-            s = s.replace(/<path class="" fill="#ffffff" fill-rule="evenodd" d="M0,0 [^"]*"\s*\/>\s*/, "")
-        }
+        // White page background that MuseScore writes first. It is missing when MuseScore's own
+        // export setting "Transparent background" is on, so it is always removed and, for an
+        // opaque result, replaced by a white rectangle behind the frame.
+        var s = pageSvg.replace(/<path class="" fill="#ffffff" fill-rule="evenodd" d="M0,0 [^"]*"\s*\/>\s*/, "")
+        var bg = transparent ? ""
+                : '\n<rect x="' + fmt(r.x) + '" y="' + fmt(r.y) + '" width="' + fmt(r.w) + '" height="' + fmt(r.h)
+                  + '" fill="#ffffff"/>'
 
         var start = s.indexOf("<svg")
         var end = s.indexOf(">", start)
@@ -1059,10 +1112,116 @@ MuseScore {
         // clipPath so editors like Inkscape really hide what is outside the viewBox
         var clip = '\n<defs><clipPath id="imageCaptureClip"><rect x="' + fmt(r.x) + '" y="' + fmt(r.y)
                 + '" width="' + fmt(r.w) + '" height="' + fmt(r.h) + '"/></clipPath></defs>'
-                + '\n<g clip-path="url(#imageCaptureClip)">'
+                + '\n<g clip-path="url(#imageCaptureClip)">' + bg
 
         var close = s.lastIndexOf("</svg>")
         return s.substring(0, start) + tag + clip + s.substring(end + 1, close) + "</g>\n</svg>\n"
+    }
+
+    // ------------------------------------------------------------------
+    //  SVG for vector editors (SVG file, SVG on the macOS clipboard)
+    // ------------------------------------------------------------------
+
+    // Adobe Illustrator draws MuseScore's SVG wrongly: it does not scale stroke widths by the
+    // viewBox (or by a transform), so staff lines, stems and noteheads become thick blocks.
+    // This also happens with MuseScore's own SVG export. Here every coordinate is rewritten in
+    // points with the frame's corner at 0,0, so no scaling is needed at all.
+    readonly property real ptPerUnit: 72 / msDpi
+
+    function buildEditorSvg(transparent) {
+        var r = cropRect()
+        var s = pageSvg.replace(/<path class="" fill="#ffffff" fill-rule="evenodd" d="M0,0 [^"]*"\s*\/>\s*/, "")
+        var start = s.indexOf("<svg")
+        var end = s.indexOf(">", start)
+        var close = s.lastIndexOf("</svg>")
+        var body = s.substring(end + 1, close)
+
+        // MuseScore writes a flat list of elements; nested groups are not converted
+        if (body.indexOf("<g") >= 0) {
+            console.warn("ImageCapture: unexpected <g> in the page SVG, writing it unconverted")
+            return buildSvg(r, transparent)
+        }
+
+        var k = ptPerUnit
+        var cv = {
+            x: function(v) { return fmt((v - r.x) * k) },
+            y: function(v) { return fmt((v - r.y) * k) },
+            len: function(v) { return fmt(v * k) },
+            // Elements with their own transform keep their numbers; the conversion is put in front
+            transform: "matrix(" + fmt(k) + " 0 0 " + fmt(k) + " " + fmt(-r.x * k) + " " + fmt(-r.y * k) + ") "
+        }
+        body = body.replace(/<([A-Za-z][\w:-]*)((?:\s+[\w:-]+\s*=\s*"[^"]*")*)(\s*\/?)>/g,
+                            function(m, name, attrs, tail) {
+                                return "<" + name + convertSvgAttrs(attrs, cv) + tail + ">"
+                            })
+
+        var w = fmt(r.w * k)
+        var h = fmt(r.h * k)
+        var bg = transparent ? "" : '\n<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="#ffffff"/>'
+        return s.substring(0, start)
+                + '<svg width="' + w + 'pt" height="' + h + 'pt" viewBox="0 0 ' + w + ' ' + h + '"'
+                + ' xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+                + '\n<defs><clipPath id="imageCaptureClip"><rect x="0" y="0" width="' + w + '" height="' + h
+                + '"/></clipPath></defs>\n<g clip-path="url(#imageCaptureClip)">' + bg
+                + body + "</g>\n</svg>\n"
+    }
+
+    readonly property var svgNumber: /-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g
+
+    function convertSvgAttrs(attrs, cv) {
+        if (/\stransform\s*=/.test(attrs)) {
+            return attrs.replace(/(\stransform\s*=\s*")([^"]*)"/, function(m, pre, v) { return pre + cv.transform + v + '"' })
+        }
+        return attrs.replace(/(\s+)([\w:-]+)(\s*=\s*)"([^"]*)"/g, function(m, sp, n, eq, v) {
+            return sp + n + eq + '"' + convertSvgAttr(n, v, cv) + '"'
+        })
+    }
+
+    function convertSvgAttr(n, v, cv) {
+        var plain = /^\s*-?[\d.]+(?:[eE][-+]?\d+)?\s*$/.test(v)
+        switch (n) {
+        case "d":
+            return convertPathData(v, cv)
+        case "points":
+            var i = 0
+            return v.replace(svgNumber, function(t) { return (i++ % 2 === 0) ? cv.x(parseFloat(t)) : cv.y(parseFloat(t)) })
+        case "x": case "x1": case "x2": case "cx":
+            return plain ? cv.x(parseFloat(v)) : v
+        case "y": case "y1": case "y2": case "cy":
+            return plain ? cv.y(parseFloat(v)) : v
+        case "width": case "height": case "r": case "rx": case "ry":
+        case "stroke-width": case "stroke-dashoffset": case "font-size":
+            return plain ? cv.len(parseFloat(v)) : v
+        case "stroke-dasharray":
+            return v.replace(svgNumber, function(t) { return cv.len(parseFloat(t)) })
+        default:
+            return v
+        }
+    }
+
+    // Absolute commands are moved and scaled, relative ones only scaled
+    function convertPathData(d, cv) {
+        return d.replace(/([A-Za-z])([^A-Za-z]*)/g, function(m, cmd, args) {
+            var up = cmd.toUpperCase()
+            var abs = cmd === up
+            var nums = args.match(svgNumber) || []
+            var out = []
+            for (var i = 0; i < nums.length; ++i) {
+                var v = parseFloat(nums[i])
+                if (up === "A") {
+                    var j = i % 7          // rx ry rotation large-arc sweep x y
+                    out.push(j === 2 || j === 3 || j === 4 ? nums[i]
+                             : j < 2 || !abs ? cv.len(v) : j === 5 ? cv.x(v) : cv.y(v))
+                } else if (up === "H") {
+                    out.push(abs ? cv.x(v) : cv.len(v))
+                } else if (up === "V") {
+                    out.push(abs ? cv.y(v) : cv.len(v))
+                } else {
+                    out.push(!abs ? cv.len(v) : i % 2 === 0 ? cv.x(v) : cv.y(v))
+                }
+            }
+            return cmd + out.join(" ") + (up === "Z" ? "" : " ")
+        }).trim()
     }
 
     // ------------------------------------------------------------------
@@ -1094,6 +1253,16 @@ MuseScore {
 
     function zoomStep(factor) {
         zoomAt(factor, flick.width / 2, flick.height / 2)
+    }
+
+    readonly property string zoomText: t("pct", [Math.round(zoom * 100)])
+
+    // Typed zoom value ("150", "150%" or "%150"), zooms around the center of the view
+    function setZoomPercent(text) {
+        var v = parseInt(String(text).replace(/[^0-9]/g, ""), 10)
+        if (v > 0) {
+            zoomStep(v / 100 / zoom)
+        }
     }
 
     // Fits a rectangle (SVG units) into the viewer and centers it (zoom at most zMax, if given)
@@ -1289,7 +1458,7 @@ MuseScore {
     function saveSvg(path) {
         startBusy("prepSvg")
         var tmp = tmpFile("out", "svg")
-        writeFile(tmp, buildCroppedSvg(transparentBg))
+        writeFile(tmp, buildEditorSvg(transparentBg))
         deliverAsync(tmp, path, "SVG", 0.3)
     }
 
@@ -1388,7 +1557,8 @@ MuseScore {
     }
 
     // macOS: AppKit's NSPasteboard via JavaScript for Automation (osascript -l JavaScript), with
-    // PNG and TIFF representations so every app finds one it accepts. macOS is checked first so
+    // PNG and TIFF representations so every app finds one it accepts, plus the cropped SVG for
+    // vector editors such as Affinity, Illustrator or Inkscape. macOS is checked first so
     // an xclip from Homebrew / XQuartz does not copy to the X11 clipboard instead. The script is
     // ASCII only and passed as an argument: AppleScript's «class PNGf» could be misread when
     // MuseScore is started from the Finder without a UTF-8 locale.
@@ -1402,6 +1572,10 @@ MuseScore {
         + ' var item = $.NSPasteboardItem.alloc.init;'
         + ' item.setDataForType(png, $.NSPasteboardTypePNG);'
         + ' item.setDataForType(img.TIFFRepresentation, $.NSPasteboardTypeTIFF);'
+        + ' if (argv.length > 1) {'
+        + '  var svg = $.NSData.dataWithContentsOfFile(argv[1]);'
+        + '  if (!svg.isNil()) { item.setDataForType(svg, $("public.svg-image")); }'
+        + ' }'
         + ' var pb = $.NSPasteboard.generalPasteboard;'
         + ' pb.clearContents;'
         + ' if (!pb.writeObjects($([item]))) { throw new Error("pasteboard write failed"); }'
@@ -1412,13 +1586,17 @@ MuseScore {
     function copyPngToClipboard(pngPath) {
         setProgress(0.6, "clipCopying")
         if (Qt.platform.os !== "windows") {
-            runShell('if [ "$(uname)" = Darwin ]; then osascript -l JavaScript -e "$2" "$1" >/dev/null;'
+            // The SVG is only used on macOS (wl-copy / xclip offer a single type)
+            var svgPath = tmpFile("clip", "svg")
+            writeFile(svgPath, buildEditorSvg(false))
+            runShell('if [ "$(uname)" = Darwin ]; then osascript -l JavaScript -e "$2" "$1" "$3" >/dev/null;'
                      + ' elif [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
                      + ' elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -t image/png -i "$1" >/dev/null 2>&1;'
                      + ' else exit 127; fi',
-                     [pngPath, macClipboardJs], 0.6, 0.97, 800,
+                     [pngPath, macClipboardJs, svgPath], 0.6, 0.97, 800,
                      function(code) {
                          removeFile(pngPath)
+                         removeFile(svgPath)
                          if (code === 0) {
                              finishBusy("clipDone", [pngDpi])
                          } else {
@@ -1658,6 +1836,13 @@ MuseScore {
                 onClicked: root.tool = "hand"
             }
             Item { width: 10; height: 1 }
+
+            // View zoom
+            MU.StyledTextLabel {
+                height: 30
+                verticalAlignment: Text.AlignVCenter
+                text: root.t("zoomLabel")
+            }
             MU.FlatButton {
                 minWidth: 32
                 margins: 8
@@ -1665,12 +1850,80 @@ MuseScore {
                 enabled: root.ready
                 onClicked: root.zoomStep(1 / 1.25)
             }
-            MU.StyledTextLabel {
-                width: 52
+            // Editable percentage: type a value and press Enter
+            QQC.TextField {
+                id: zoomField
+                width: 60
                 height: 30
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                text: root.t("pct", [Math.round(root.zoom * 100)])
+                enabled: root.ready
+                horizontalAlignment: TextInput.AlignHCenter
+                verticalAlignment: TextInput.AlignVCenter
+                selectByMouse: true
+                color: ui.theme.fontPrimaryColor
+                font: ui.theme.bodyFont
+                validator: RegularExpressionValidator { regularExpression: /\s*%?\s*\d{0,4}\s*%?\s*/ }
+                text: root.zoomText
+                background: Rectangle {
+                    color: ui.theme.textFieldColor
+                    border.color: zoomField.activeFocus ? ui.theme.accentColor : ui.theme.strokeColor
+                    border.width: 1
+                    radius: 3
+                }
+                property bool edited: false
+                property bool applying: false
+                // Applies the typed value; the field keeps its text and focus
+                function applyTyped() {
+                    typeTimer.stop()
+                    if (edited) {
+                        edited = false
+                        applying = true
+                        root.setZoomPercent(text)
+                        applying = false
+                    }
+                }
+                function apply() {
+                    applyTyped()
+                    restore()
+                }
+                function restore() {
+                    typeTimer.stop()
+                    edited = false
+                    text = Qt.binding(function() { return root.zoomText })
+                    focus = false
+                }
+                // The value is also applied shortly after typing stops
+                Timer {
+                    id: typeTimer
+                    interval: 600
+                    onTriggered: zoomField.applyTyped()
+                }
+                onTextEdited: {
+                    edited = true
+                    typeTimer.restart()
+                }
+                onActiveFocusChanged: {
+                    if (activeFocus) {
+                        selectAll()
+                    } else if (edited) {
+                        apply()                      // clicked elsewhere: use the typed value
+                    }
+                }
+                // MuseScore takes Enter / Escape as shortcuts unless the focused item claims them
+                Keys.onShortcutOverride: function(event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Escape) {
+                        event.accepted = true
+                    }
+                }
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        apply()
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        restore()
+                        event.accepted = true
+                    }
+                }
+                onAccepted: apply()
             }
             MU.FlatButton {
                 minWidth: 32
@@ -1687,15 +1940,39 @@ MuseScore {
             }
             MU.FlatButton {
                 minWidth: 0
-                text: root.t("fitFrame")
+                text: root.t("fitArea")
                 enabled: root.ready
                 onClicked: root.fitCrop()
             }
+            Item { width: 10; height: 1 }
+
+            // Capture area: default (selection / title + first system), whole page, or the
+            // area last drawn / adjusted by the user
+            MU.StyledTextLabel {
+                height: 30
+                verticalAlignment: Text.AlignVCenter
+                text: root.t("areaLabel")
+            }
             MU.FlatButton {
                 minWidth: 0
-                text: root.wholePageMode ? root.t("defaultFrame") : root.t("wholePage")
+                text: root.t("areaDefault")
                 enabled: root.ready
-                onClicked: root.wholePageMode ? root.restoreDefaultFrame() : root.setWholePage()
+                accentButton: root.frameMode === "default"
+                onClicked: root.restoreDefaultFrame()
+            }
+            MU.FlatButton {
+                minWidth: 0
+                text: root.t("wholePage")
+                enabled: root.ready
+                accentButton: root.frameMode === "page"
+                onClicked: root.setWholePage()
+            }
+            MU.FlatButton {
+                minWidth: 0
+                text: root.t("areaCustom")
+                enabled: root.ready && !!root.customFrame
+                accentButton: root.frameMode === "custom"
+                onClicked: root.restoreCustomFrame()
             }
             Item { width: 10; height: 1 }
             MU.FlatButton {
@@ -1755,6 +2032,7 @@ MuseScore {
                 interactive: !root.dragging
                 boundsBehavior: Flickable.StopAtBounds
                 pressDelay: 0
+                onMovementStarted: root.releaseZoomField()
 
                 QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
                 QQC.ScrollBar.horizontal: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
@@ -1790,6 +2068,7 @@ MuseScore {
                     property var dragStart: null
 
                     function beginDrag(p) {
+                        root.releaseZoomField()
                         var c = root.cropNow
                         dragStart = { px: p.x, py: p.y,
                                       x1: c.x, y1: c.y, x2: c.x + c.w, y2: c.y + c.h }
@@ -1814,6 +2093,7 @@ MuseScore {
                             if (mode.indexOf("b") >= 0) { y2 = Math.max(y2 + dy, y1 + minSize) }
                         }
                         root.setCropSvg({ x: x1, y: y1, w: x2 - x1, h: y2 - y1 })
+                        root.markCustomFrame()
                     }
 
                     function endDrag() {
@@ -1914,6 +2194,7 @@ MuseScore {
                         }
 
                         onPressed: function(mouse) {
+                            root.releaseZoomField()
                             start = Qt.point(mouse.x, mouse.y)
                             prevCrop = root.cropNow
                             root.dragging = true
@@ -1926,6 +2207,8 @@ MuseScore {
                             // A click without dragging restores the previous frame
                             if ((Math.abs(mouse.x - start.x) < 4 || Math.abs(mouse.y - start.y) < 4) && prevCrop) {
                                 root.setCropSvg(prevCrop)
+                            } else {
+                                root.markCustomFrame()
                             }
                         }
                     }

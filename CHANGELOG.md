@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.5 — 2026-10-26
+
+Suggestions and a report from scorster on the musescore.org forum:
+
+- SVG: with **Transparent background** off, the SVG now always has a white background. It used to rely on the white page that MuseScore writes into its SVG export, which is missing when MuseScore's own export setting "Transparent background" is on, so the SVG came out transparent anyway.
+- SVG opens correctly in Adobe Illustrator. Illustrator did not scale the stroke widths of MuseScore's SVG, so staff lines, stems and noteheads became thick black blocks (MuseScore's own SVG export has the same problem). The SVG is now written in points with the capture area starting at 0,0, so no scaling is needed. PNG, JPEG, TIFF and PDF are unchanged.
+- The zoom percentage can be typed in (e.g. `150`); it is applied after a short pause, with Enter or when you click elsewhere.
+- The toolbar is grouped: **Zoom:** `−` / % / `+` / **Fit page** / **Fit area**, and **Capture area:** **Default** / **Whole page** / **Custom**. The blue frame is now called the *capture area* everywhere, so it is no longer confused with the zoom buttons.
+- **Custom** returns to the area you last drew or adjusted, e.g. after trying **Whole page**. Before, there was a single button that switched between "Whole page" and "Default frame".
+- macOS: **Copy to clipboard** also puts the cropped SVG on the clipboard (next to PNG and TIFF), so vector editors such as Affinity can paste it as vectors. Not tested on a Mac yet.
+
 ## 1.3.4 — 2026-10-26
 
 - A single selected element (for example a time signature or a note that was left selected) no longer sets the frame. Only a range selection of measures does; otherwise the title and the first system are framed, as without a selection. Before, the frame shrank around the tiny element and the view zoomed to 800 %.

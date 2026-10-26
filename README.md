@@ -8,22 +8,22 @@ Brings back MuseScore 3's **Image Capture** tool, which was removed in MuseScore
 
 ## Features
 
-- **Opens with the right frame**
-  - With a range selection, the frame starts around the selection.
-  - Without a range selection, it frames the title and the first system. A single selected element (e.g. a note or a time signature) is ignored.
+- **Opens with the right capture area**
+  - With a range selection, the capture area starts around the selection.
+  - Without a range selection, it covers the title and the first system. A single selected element (e.g. a note or a time signature) is ignored.
 - **Page viewer**
   - The whole page is shown; use `<` / `>` to switch pages.
-  - Zoom with `−` / `+` or Ctrl + mouse wheel. Fit page and Fit frame buttons.
-- **Crop frame**
-  - Drag the frame from inside to move it. Drag its edges and corners to resize it.
-  - Select tool: drag outside the frame to draw a new one. Hand tool: drag to scroll the page.
-  - **Whole page** frames the entire page; the same button then becomes **Default frame** to go back.
-  - **Advanced:** exact margins around the frame, in spatium.
+  - Zoom with `−` / `+`, by typing a percentage, or with Ctrl + mouse wheel. **Fit page** and **Fit area** buttons.
+- **Capture area** (the blue frame)
+  - Drag it from inside to move it. Drag its edges and corners to resize it.
+  - Select tool: drag outside the area to draw a new one. Hand tool: drag to scroll the page.
+  - **Default** (selection, or title + first system), **Whole page**, or **Custom** (the area you last drew or adjusted).
+  - **Advanced:** exact margins around the area, in spatium.
 - **Output**
   - Formats: JPEG, PDF, PNG, SVG, TIFF.
   - Resolution: 72, 150, 300, 600 or 1200 dpi (JPEG, PNG, TIFF).
   - Transparent background (PNG, TIFF, SVG).
-  - Copy to clipboard (PNG at the chosen resolution).
+  - Copy to clipboard (PNG at the chosen resolution; on macOS also as TIFF and SVG).
 - **Languages:** English, Türkçe, Deutsch, Français, Español, Português. The plugin follows MuseScore's interface language; you can also change it in the window.
 
 ## Requirements
@@ -113,11 +113,11 @@ MuseScore 4'te kaldırılan, MuseScore 3'teki **Görüntü Yakalama** aracını 
 ### Özellikler
 
 - **Açılış:** Ölçü seçiliyse çerçeve seçimin çevresinde açılır. Ölçü aralığı seçimi yoksa başlık ve ilk sistem çerçevelenir; tek başına seçili bir öğe (nota, ölçü işareti vb.) dikkate alınmaz.
-- **Görüntüleyici:** Tam sayfa görünür. `−` / `+` veya Ctrl + tekerlek ile yakınlaştırılır, `<` / `>` ile sayfa değiştirilir.
-- **Çerçeve**
+- **Görüntüleyici:** Tam sayfa görünür. `−` / `+`, yüzde yazarak veya Ctrl + tekerlek ile yakınlaştırılır, `<` / `>` ile sayfa değiştirilir.
+- **Yakalama alanı** (mavi çerçeve)
   - İçinden tutup taşınır, kenar ve köşelerinden boyutlandırılır.
-  - **Whole page / Tüm sayfa** tüm sayfayı çerçeveler. Aynı buton sonra **Varsayılan çerçeve** olur ve ilk çerçeveye döner.
-  - **Gelişmiş:** Çerçeve çevresine spatium cinsinden boşluk.
+  - **Varsayılan** (seçim ya da başlık + ilk sistem), **Tüm sayfa** veya **Özel** (en son çizilen / ayarlanan alan).
+  - **Gelişmiş:** Alanın çevresine spatium cinsinden boşluk.
 - **Çıktı:** JPEG, PDF, PNG, SVG, TIFF. 72–1200 dpi çözünürlük, saydam arka plan, panoya kopyala.
 - **Diller:** English, Türkçe, Deutsch, Français, Español, Português. MuseScore'un arayüz dilini izler.
 
