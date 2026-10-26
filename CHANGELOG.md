@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.6 — 2026-10-26
+
+- The toolbar wraps by groups (tools, zoom, capture area, pages) when the window is narrow, so a single button such as `>` no longer ends up alone on the second line.
+- New screenshot in the README.
+
 ## 1.3.5 — 2026-10-26
 
 Suggestions and a report from scorster on the musescore.org forum:

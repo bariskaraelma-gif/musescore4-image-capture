@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.5"
+    version: "1.3.6"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -1818,186 +1818,206 @@ MuseScore {
             }
         }
 
-        // Toolbar (wraps to a second line when the window is narrow)
+        // Toolbar: groups wrap to the next line as a whole when the window is narrow
         Flow {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: 6              // between groups and between lines; groups add rightPadding
 
-            MU.FlatButton {
-                minWidth: 56
-                text: root.t("toolSelect")
-                accentButton: root.tool === "select"
-                onClicked: root.tool = "select"
+            // Tools
+            Row {
+                spacing: 6
+                rightPadding: 14
+
+                MU.FlatButton {
+                    minWidth: 56
+                    text: root.t("toolSelect")
+                    accentButton: root.tool === "select"
+                    onClicked: root.tool = "select"
+                }
+                MU.FlatButton {
+                    minWidth: 56
+                    text: root.t("toolHand")
+                    accentButton: root.tool === "hand"
+                    onClicked: root.tool = "hand"
+                }
             }
-            MU.FlatButton {
-                minWidth: 56
-                text: root.t("toolHand")
-                accentButton: root.tool === "hand"
-                onClicked: root.tool = "hand"
-            }
-            Item { width: 10; height: 1 }
 
             // View zoom
-            MU.StyledTextLabel {
-                height: 30
-                verticalAlignment: Text.AlignVCenter
-                text: root.t("zoomLabel")
-            }
-            MU.FlatButton {
-                minWidth: 32
-                margins: 8
-                text: "−"
-                enabled: root.ready
-                onClicked: root.zoomStep(1 / 1.25)
-            }
-            // Editable percentage: type a value and press Enter
-            QQC.TextField {
-                id: zoomField
-                width: 60
-                height: 30
-                enabled: root.ready
-                horizontalAlignment: TextInput.AlignHCenter
-                verticalAlignment: TextInput.AlignVCenter
-                selectByMouse: true
-                color: ui.theme.fontPrimaryColor
-                font: ui.theme.bodyFont
-                validator: RegularExpressionValidator { regularExpression: /\s*%?\s*\d{0,4}\s*%?\s*/ }
-                text: root.zoomText
-                background: Rectangle {
-                    color: ui.theme.textFieldColor
-                    border.color: zoomField.activeFocus ? ui.theme.accentColor : ui.theme.strokeColor
-                    border.width: 1
-                    radius: 3
+            Row {
+                spacing: 6
+                rightPadding: 14
+
+                MU.StyledTextLabel {
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    text: root.t("zoomLabel")
                 }
-                property bool edited: false
-                property bool applying: false
-                // Applies the typed value; the field keeps its text and focus
-                function applyTyped() {
-                    typeTimer.stop()
-                    if (edited) {
-                        edited = false
-                        applying = true
-                        root.setZoomPercent(text)
-                        applying = false
+                MU.FlatButton {
+                    minWidth: 32
+                    margins: 8
+                    text: "−"
+                    enabled: root.ready
+                    onClicked: root.zoomStep(1 / 1.25)
+                }
+                // Editable percentage: type a value and press Enter
+                QQC.TextField {
+                    id: zoomField
+                    width: 60
+                    height: 30
+                    enabled: root.ready
+                    horizontalAlignment: TextInput.AlignHCenter
+                    verticalAlignment: TextInput.AlignVCenter
+                    selectByMouse: true
+                    color: ui.theme.fontPrimaryColor
+                    font: ui.theme.bodyFont
+                    validator: RegularExpressionValidator { regularExpression: /\s*%?\s*\d{0,4}\s*%?\s*/ }
+                    text: root.zoomText
+                    background: Rectangle {
+                        color: ui.theme.textFieldColor
+                        border.color: zoomField.activeFocus ? ui.theme.accentColor : ui.theme.strokeColor
+                        border.width: 1
+                        radius: 3
                     }
-                }
-                function apply() {
-                    applyTyped()
-                    restore()
-                }
-                function restore() {
-                    typeTimer.stop()
-                    edited = false
-                    text = Qt.binding(function() { return root.zoomText })
-                    focus = false
-                }
-                // The value is also applied shortly after typing stops
-                Timer {
-                    id: typeTimer
-                    interval: 600
-                    onTriggered: zoomField.applyTyped()
-                }
-                onTextEdited: {
-                    edited = true
-                    typeTimer.restart()
-                }
-                onActiveFocusChanged: {
-                    if (activeFocus) {
-                        selectAll()
-                    } else if (edited) {
-                        apply()                      // clicked elsewhere: use the typed value
+                    property bool edited: false
+                    property bool applying: false
+                    // Applies the typed value; the field keeps its text and focus
+                    function applyTyped() {
+                        typeTimer.stop()
+                        if (edited) {
+                            edited = false
+                            applying = true
+                            root.setZoomPercent(text)
+                            applying = false
+                        }
                     }
-                }
-                // MuseScore takes Enter / Escape as shortcuts unless the focused item claims them
-                Keys.onShortcutOverride: function(event) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Escape) {
-                        event.accepted = true
-                    }
-                }
-                Keys.onPressed: function(event) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        apply()
-                        event.accepted = true
-                    } else if (event.key === Qt.Key_Escape) {
+                    function apply() {
+                        applyTyped()
                         restore()
-                        event.accepted = true
                     }
+                    function restore() {
+                        typeTimer.stop()
+                        edited = false
+                        text = Qt.binding(function() { return root.zoomText })
+                        focus = false
+                    }
+                    // The value is also applied shortly after typing stops
+                    Timer {
+                        id: typeTimer
+                        interval: 600
+                        onTriggered: zoomField.applyTyped()
+                    }
+                    onTextEdited: {
+                        edited = true
+                        typeTimer.restart()
+                    }
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            selectAll()
+                        } else if (edited) {
+                            apply()                      // clicked elsewhere: use the typed value
+                        }
+                    }
+                    // MuseScore takes Enter / Escape as shortcuts unless the focused item claims them
+                    Keys.onShortcutOverride: function(event) {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Escape) {
+                            event.accepted = true
+                        }
+                    }
+                    Keys.onPressed: function(event) {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            apply()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            restore()
+                            event.accepted = true
+                        }
+                    }
+                    onAccepted: apply()
                 }
-                onAccepted: apply()
+                MU.FlatButton {
+                    minWidth: 32
+                    margins: 8
+                    text: "+"
+                    enabled: root.ready
+                    onClicked: root.zoomStep(1.25)
+                }
+                MU.FlatButton {
+                    minWidth: 0
+                    text: root.t("fitPage")
+                    enabled: root.ready
+                    onClicked: root.fitPage()
+                }
+                MU.FlatButton {
+                    minWidth: 0
+                    text: root.t("fitArea")
+                    enabled: root.ready
+                    onClicked: root.fitCrop()
+                }
             }
-            MU.FlatButton {
-                minWidth: 32
-                margins: 8
-                text: "+"
-                enabled: root.ready
-                onClicked: root.zoomStep(1.25)
-            }
-            MU.FlatButton {
-                minWidth: 0
-                text: root.t("fitPage")
-                enabled: root.ready
-                onClicked: root.fitPage()
-            }
-            MU.FlatButton {
-                minWidth: 0
-                text: root.t("fitArea")
-                enabled: root.ready
-                onClicked: root.fitCrop()
-            }
-            Item { width: 10; height: 1 }
 
             // Capture area: default (selection / title + first system), whole page, or the
             // area last drawn / adjusted by the user
-            MU.StyledTextLabel {
-                height: 30
-                verticalAlignment: Text.AlignVCenter
-                text: root.t("areaLabel")
-            }
-            MU.FlatButton {
-                minWidth: 0
-                text: root.t("areaDefault")
-                enabled: root.ready
-                accentButton: root.frameMode === "default"
-                onClicked: root.restoreDefaultFrame()
-            }
-            MU.FlatButton {
-                minWidth: 0
-                text: root.t("wholePage")
-                enabled: root.ready
-                accentButton: root.frameMode === "page"
-                onClicked: root.setWholePage()
-            }
-            MU.FlatButton {
-                minWidth: 0
-                text: root.t("areaCustom")
-                enabled: root.ready && !!root.customFrame
-                accentButton: root.frameMode === "custom"
-                onClicked: root.restoreCustomFrame()
-            }
-            Item { width: 10; height: 1 }
-            MU.FlatButton {
-                minWidth: 32
-                margins: 8
-                text: "<"
-                enabled: root.ready && root.currentPage > 0
-                onClicked: {
-                    root.showPage(root.currentPage - 1, false)
-                    Qt.callLater(root.fitPage)
+            Row {
+                spacing: 6
+                rightPadding: 14
+
+                MU.StyledTextLabel {
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    text: root.t("areaLabel")
+                }
+                MU.FlatButton {
+                    minWidth: 0
+                    text: root.t("areaDefault")
+                    enabled: root.ready
+                    accentButton: root.frameMode === "default"
+                    onClicked: root.restoreDefaultFrame()
+                }
+                MU.FlatButton {
+                    minWidth: 0
+                    text: root.t("wholePage")
+                    enabled: root.ready
+                    accentButton: root.frameMode === "page"
+                    onClicked: root.setWholePage()
+                }
+                MU.FlatButton {
+                    minWidth: 0
+                    text: root.t("areaCustom")
+                    enabled: root.ready && !!root.customFrame
+                    accentButton: root.frameMode === "custom"
+                    onClicked: root.restoreCustomFrame()
                 }
             }
-            MU.StyledTextLabel {
-                height: 30
-                verticalAlignment: Text.AlignVCenter
-                text: root.ready ? root.t("pageOf", [root.currentPage + 1, root.pageCount]) : ""
-            }
-            MU.FlatButton {
-                minWidth: 32
-                margins: 8
-                text: ">"
-                enabled: root.ready && root.currentPage < root.pageCount - 1
-                onClicked: {
-                    root.showPage(root.currentPage + 1, false)
-                    Qt.callLater(root.fitPage)
+
+            // Pages
+            Row {
+                spacing: 6
+                rightPadding: 14
+
+                MU.FlatButton {
+                    minWidth: 32
+                    margins: 8
+                    text: "<"
+                    enabled: root.ready && root.currentPage > 0
+                    onClicked: {
+                        root.showPage(root.currentPage - 1, false)
+                        Qt.callLater(root.fitPage)
+                    }
+                }
+                MU.StyledTextLabel {
+                    height: 30
+                    verticalAlignment: Text.AlignVCenter
+                    text: root.ready ? root.t("pageOf", [root.currentPage + 1, root.pageCount]) : ""
+                }
+                MU.FlatButton {
+                    minWidth: 32
+                    margins: 8
+                    text: ">"
+                    enabled: root.ready && root.currentPage < root.pageCount - 1
+                    onClicked: {
+                        root.showPage(root.currentPage + 1, false)
+                        Qt.callLater(root.fitPage)
+                    }
                 }
             }
         }
