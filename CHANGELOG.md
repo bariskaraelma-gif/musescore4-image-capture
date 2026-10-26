@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.7 — 2026-10-27
+
+Suggestions and a report from scorster on the musescore.org forum:
+
+- macOS: with the type set to **SVG** or **PDF**, **Copy to clipboard** now puts only vectors on the clipboard (PDF and SVG), so Affinity, Preview (File → New from Clipboard), Keynote, Illustrator etc. paste vectors. Before, PNG and TIFF were offered as well and these apps took the image instead. The PDF is made with `rsvg-convert` (`brew install librsvg`); without it the plugin copies an image as before and says so. With PNG, JPEG or TIFF the clipboard is unchanged.
+- macOS: tools installed with Homebrew (`/opt/homebrew/bin`, `/usr/local/bin`) are found even when MuseScore is started from the Finder.
+- **Select / Hand** and **Default / Whole page / Custom** are now segmented toggles (touching segments, the chosen one highlighted), so they no longer look like separate push buttons.
+- The toolbar groups (Tools, Zoom, Capture area, pages) have a thin frame, and the tools group has a label.
+
 ## 1.3.6 — 2026-10-26
 
 - The toolbar wraps by groups (tools, zoom, capture area, pages) when the window is narrow, so a single button such as `>` no longer ends up alone on the second line.

@@ -23,7 +23,8 @@ Brings back MuseScore 3's **Image Capture** tool, which was removed in MuseScore
   - Formats: JPEG, PDF, PNG, SVG, TIFF.
   - Resolution: 72, 150, 300, 600 or 1200 dpi (JPEG, PNG, TIFF).
   - Transparent background (PNG, TIFF, SVG).
-  - Copy to clipboard (PNG at the chosen resolution; on macOS also as TIFF and SVG).
+  - Copy to clipboard (PNG at the chosen resolution). On macOS: as vectors (PDF + SVG) when the type is SVG or PDF,
+    otherwise as PNG, TIFF and SVG.
 - **Languages:** English, Türkçe, Deutsch, Français, Español, Português. The plugin follows MuseScore's interface language; you can also change it in the window.
 
 ## Requirements
@@ -35,7 +36,7 @@ Brings back MuseScore 3's **Image Capture** tool, which was removed in MuseScore
   sudo apt install librsvg2-bin imagemagick wl-clipboard xclip
   ```
   (`librsvg2-bin` → PDF, `imagemagick` → TIFF, `wl-clipboard` → clipboard on Wayland, `xclip` → clipboard on X11)
-- **macOS:** TIFF and clipboard use built-in tools (`sips`, `osascript`). For PDF install `librsvg` (`brew install librsvg`) or Google Chrome.
+- **macOS:** TIFF and clipboard use built-in tools (`sips`, `osascript`). For PDF, and for copying to the clipboard as vectors, install `librsvg` (`brew install librsvg`); PDF can also be made with Google Chrome.
 
 ## Installation
 
@@ -149,7 +150,7 @@ MuseScore 4'te kaldırılan, MuseScore 3'teki **Görüntü Yakalama** aracını 
 
 - Yalnızca **sayfa görünümünde** çalışır.
 - Seçim birden fazla sayfaya yayılırsa yalnızca ilk sayfadaki kısım kullanılır.
-- Linux'ta PDF, TIFF ve pano için yardımcı araçlar gerekir: `sudo apt install librsvg2-bin imagemagick wl-clipboard xclip`. macOS'ta PDF için `brew install librsvg` veya Google Chrome gerekir.
+- Linux'ta PDF, TIFF ve pano için yardımcı araçlar gerekir: `sudo apt install librsvg2-bin imagemagick wl-clipboard xclip`. macOS'ta PDF ve panoya vektör olarak kopyalama için `brew install librsvg` gerekir (PDF Google Chrome ile de yapılabilir).
 
 ### Bu proje hakkında
 

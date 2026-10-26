@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.6"
+    version: "1.3.7"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -295,6 +295,7 @@ MuseScore {
             language: "Language:",
             toolHand: "Hand",
             toolSelect: "Select",
+            toolsLabel: "Tools:",
             zoomLabel: "Zoom:",
             fitPage: "Fit page",
             fitArea: "Fit area",
@@ -344,6 +345,8 @@ MuseScore {
             clipCopying: "Copying to the clipboard...",
             clipDone: "Image copied to the clipboard (%1 dpi). You can paste it into Word, an e-mail, etc.",
             clipFailed: "Could not copy to the clipboard.",
+            clipDoneVector: "Copied to the clipboard as vectors (PDF and SVG). You can paste it into Affinity, Illustrator, Keynote, Preview (File → New from Clipboard), etc.",
+            clipNoVector: "Copied to the clipboard as an image (%1 dpi). For vectors install librsvg: brew install librsvg",
             tiffNoTool: "TIFF export needs ImageMagick (magick or convert). Install it, e.g. sudo apt install imagemagick",
             makingPdfRsvg: "Creating PDF (rsvg-convert)...",
             tiffConverting: "Converting to TIFF...",
@@ -359,6 +362,7 @@ MuseScore {
             language: "Dil:",
             toolHand: "El",
             toolSelect: "Seç",
+            toolsLabel: "Araçlar:",
             zoomLabel: "Yakınlaştırma:",
             fitPage: "Sayfaya sığdır",
             fitArea: "Alana sığdır",
@@ -408,6 +412,8 @@ MuseScore {
             clipCopying: "Panoya kopyalanıyor...",
             clipDone: "Görüntü panoya kopyalandı (%1 dpi). Word, e-posta vb. yere yapıştırabilirsiniz.",
             clipFailed: "Panoya kopyalanamadı.",
+            clipDoneVector: "Panoya vektör olarak kopyalandı (PDF ve SVG). Affinity, Illustrator, Keynote, Önizleme (Dosya → Panodan Yeni) vb. yere yapıştırabilirsiniz.",
+            clipNoVector: "Panoya görüntü olarak kopyalandı (%1 dpi). Vektör için librsvg kurun: brew install librsvg",
             tiffNoTool: "TIFF kaydetmek için ImageMagick (magick veya convert) gerekli. Örn.: sudo apt install imagemagick",
             makingPdfRsvg: "PDF oluşturuluyor (rsvg-convert)...",
             tiffConverting: "TIFF'e dönüştürülüyor...",
@@ -423,6 +429,7 @@ MuseScore {
             language: "Sprache:",
             toolHand: "Hand",
             toolSelect: "Auswahl",
+            toolsLabel: "Werkzeuge:",
             zoomLabel: "Zoom:",
             fitPage: "Seite einpassen",
             fitArea: "Bereich einpassen",
@@ -472,6 +479,8 @@ MuseScore {
             clipCopying: "Wird in die Zwischenablage kopiert...",
             clipDone: "Bild in die Zwischenablage kopiert (%1 dpi). Sie können es in Word, E-Mails usw. einfügen.",
             clipFailed: "Kopieren in die Zwischenablage fehlgeschlagen.",
+            clipDoneVector: "Als Vektoren (PDF und SVG) in die Zwischenablage kopiert. Sie können sie in Affinity, Illustrator, Keynote, Vorschau (Ablage → Neu aus Zwischenablage) usw. einfügen.",
+            clipNoVector: "Als Bild in die Zwischenablage kopiert (%1 dpi). Für Vektoren librsvg installieren: brew install librsvg",
             tiffNoTool: "Für den TIFF-Export wird ImageMagick (magick oder convert) benötigt, z. B.: sudo apt install imagemagick",
             makingPdfRsvg: "PDF wird erstellt (rsvg-convert)...",
             tiffConverting: "Wird in TIFF umgewandelt...",
@@ -487,6 +496,7 @@ MuseScore {
             language: "Langue :",
             toolHand: "Main",
             toolSelect: "Sélection",
+            toolsLabel: "Outils :",
             zoomLabel: "Zoom :",
             fitPage: "Ajuster à la page",
             fitArea: "Ajuster à la zone",
@@ -536,6 +546,8 @@ MuseScore {
             clipCopying: "Copie dans le presse-papiers...",
             clipDone: "Image copiée dans le presse-papiers (%1 dpi). Vous pouvez la coller dans Word, un e-mail, etc.",
             clipFailed: "Impossible de copier dans le presse-papiers.",
+            clipDoneVector: "Copié dans le presse-papiers en vectoriel (PDF et SVG). Vous pouvez le coller dans Affinity, Illustrator, Keynote, Aperçu (Fichier → Nouveau depuis le presse-papiers), etc.",
+            clipNoVector: "Copié dans le presse-papiers en tant qu'image (%1 dpi). Pour le vectoriel, installez librsvg : brew install librsvg",
             tiffNoTool: "L'export TIFF nécessite ImageMagick (magick ou convert), p. ex. : sudo apt install imagemagick",
             makingPdfRsvg: "Création du PDF (rsvg-convert)...",
             tiffConverting: "Conversion en TIFF...",
@@ -551,6 +563,7 @@ MuseScore {
             language: "Idioma:",
             toolHand: "Mano",
             toolSelect: "Selección",
+            toolsLabel: "Herramientas:",
             zoomLabel: "Zoom:",
             fitPage: "Ajustar a la página",
             fitArea: "Ajustar al área",
@@ -600,6 +613,8 @@ MuseScore {
             clipCopying: "Copiando al portapapeles...",
             clipDone: "Imagen copiada al portapapeles (%1 dpi). Puede pegarla en Word, un correo, etc.",
             clipFailed: "No se pudo copiar al portapapeles.",
+            clipDoneVector: "Copiado al portapapeles como vectores (PDF y SVG). Puede pegarlo en Affinity, Illustrator, Keynote, Vista Previa (Archivo → Nuevo desde el portapapeles), etc.",
+            clipNoVector: "Copiado al portapapeles como imagen (%1 dpi). Para vectores, instale librsvg: brew install librsvg",
             tiffNoTool: "La exportación TIFF necesita ImageMagick (magick o convert), p. ej.: sudo apt install imagemagick",
             makingPdfRsvg: "Creando PDF (rsvg-convert)...",
             tiffConverting: "Convirtiendo a TIFF...",
@@ -615,6 +630,7 @@ MuseScore {
             language: "Idioma:",
             toolHand: "Mão",
             toolSelect: "Seleção",
+            toolsLabel: "Ferramentas:",
             zoomLabel: "Zoom:",
             fitPage: "Ajustar à página",
             fitArea: "Ajustar à área",
@@ -664,6 +680,8 @@ MuseScore {
             clipCopying: "Copiando para a área de transferência...",
             clipDone: "Imagem copiada para a área de transferência (%1 dpi). Você pode colá-la no Word, em um e-mail etc.",
             clipFailed: "Não foi possível copiar para a área de transferência.",
+            clipDoneVector: "Copiado para a área de transferência como vetores (PDF e SVG). Você pode colá-lo no Affinity, Illustrator, Keynote, Pré-Visualização (Arquivo → Novo da Área de Transferência) etc.",
+            clipNoVector: "Copiado para a área de transferência como imagem (%1 dpi). Para vetores, instale o librsvg: brew install librsvg",
             tiffNoTool: "A exportação TIFF precisa do ImageMagick (magick ou convert), ex.: sudo apt install imagemagick",
             makingPdfRsvg: "Criando PDF (rsvg-convert)...",
             tiffConverting: "Convertendo para TIFF...",
@@ -1421,7 +1439,9 @@ MuseScore {
     function runShell(script, args, from, to, expectMs, onDone) {
         var statusPath = tmpFile("status", "txt")
         removeFile(statusPath)
-        var wrapped = 'st="$1"; shift; unset LD_LIBRARY_PATH LD_PRELOAD; ( ' + script + ' ); echo $? > "$st"'
+        // macOS apps started from the Finder do not get Homebrew's directories in PATH
+        var wrapped = 'st="$1"; shift; unset LD_LIBRARY_PATH LD_PRELOAD;'
+                      + ' PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"; export PATH; ( ' + script + ' ); echo $? > "$st"'
         runAsync("/bin/sh", ["-c", wrapped, "sh", statusPath].concat(args), from, to, expectMs,
                  function(ok) {
                      var code = fileExists(statusPath) ? parseInt(String(readFile(statusPath)).trim(), 10) : -1
@@ -1556,9 +1576,11 @@ MuseScore {
                  0.6, 0.97, 1500, done)
     }
 
-    // macOS: AppKit's NSPasteboard via JavaScript for Automation (osascript -l JavaScript), with
-    // PNG and TIFF representations so every app finds one it accepts, plus the cropped SVG for
-    // vector editors such as Affinity, Illustrator or Inkscape. macOS is checked first so
+    // macOS: AppKit's NSPasteboard via JavaScript for Automation (osascript -l JavaScript).
+    // Raster type chosen: PNG and TIFF so every app finds one it accepts, plus the cropped SVG.
+    // SVG / PDF chosen: only vectors (PDF made with rsvg-convert, and the SVG), because apps such
+    // as Affinity and Preview take PNG / TIFF first when they are offered; without rsvg-convert it
+    // falls back to PNG + TIFF + SVG and returns "novector". macOS is checked first so
     // an xclip from Homebrew / XQuartz does not copy to the X11 clipboard instead. The script is
     // ASCII only and passed as an argument: AppleScript's «class PNGf» could be misread when
     // MuseScore is started from the Finder without a UTF-8 locale.
@@ -1570,8 +1592,14 @@ MuseScore {
         + ' var img = $.NSImage.alloc.initWithData(png);'
         + ' if (img.isNil()) { throw new Error("not an image"); }'
         + ' var item = $.NSPasteboardItem.alloc.init;'
-        + ' item.setDataForType(png, $.NSPasteboardTypePNG);'
-        + ' item.setDataForType(img.TIFFRepresentation, $.NSPasteboardTypeTIFF);'
+        + ' var wantVector = argv.length > 3 && argv[3] === "1";'
+        + ' var pdf = argv.length > 2 && argv[2] ? $.NSData.dataWithContentsOfFile(argv[2]) : null;'
+        + ' var vector = !!(wantVector && pdf && !pdf.isNil());'
+        + ' if (vector) { item.setDataForType(pdf, $.NSPasteboardTypePDF); }'
+        + ' else {'
+        + '  item.setDataForType(png, $.NSPasteboardTypePNG);'
+        + '  item.setDataForType(img.TIFFRepresentation, $.NSPasteboardTypeTIFF);'
+        + ' }'
         + ' if (argv.length > 1) {'
         + '  var svg = $.NSData.dataWithContentsOfFile(argv[1]);'
         + '  if (!svg.isNil()) { item.setDataForType(svg, $("public.svg-image")); }'
@@ -1579,6 +1607,7 @@ MuseScore {
         + ' var pb = $.NSPasteboard.generalPasteboard;'
         + ' pb.clearContents;'
         + ' if (!pb.writeObjects($([item]))) { throw new Error("pasteboard write failed"); }'
+        + ' return wantVector && !vector ? "novector" : "ok";'
         + '}'
 
     // Linux: wl-copy (Wayland) or xclip (X11). Both fork and keep serving the clipboard in the
@@ -1586,19 +1615,29 @@ MuseScore {
     function copyPngToClipboard(pngPath) {
         setProgress(0.6, "clipCopying")
         if (Qt.platform.os !== "windows") {
-            // The SVG is only used on macOS (wl-copy / xclip offer a single type)
+            // The SVG (and for SVG / PDF types the PDF) is only used on macOS (wl-copy / xclip offer a single type)
             var svgPath = tmpFile("clip", "svg")
+            var pdfPath = tmpFile("clip", "pdf")
+            var wantVector = !formatIsRaster
+            var mac = Qt.platform.os === "osx" || Qt.platform.os === "macos"
             writeFile(svgPath, buildEditorSvg(false))
-            runShell('if [ "$(uname)" = Darwin ]; then osascript -l JavaScript -e "$2" "$1" "$3" >/dev/null;'
+            runShell('if [ "$(uname)" = Darwin ]; then'
+                     + ' if [ "$5" = 1 ] && command -v rsvg-convert >/dev/null 2>&1; then'
+                     + '  rsvg-convert -f pdf -o "$4" "$3" >/dev/null 2>&1 || rm -f "$4"; fi;'
+                     + ' r=$(osascript -l JavaScript -e "$2" "$1" "$3" "$4" "$5") || exit 1;'
+                     + ' [ "$r" = novector ] && exit 3; exit 0;'
                      + ' elif [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
                      + ' elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -t image/png -i "$1" >/dev/null 2>&1;'
                      + ' else exit 127; fi',
-                     [pngPath, macClipboardJs, svgPath], 0.6, 0.97, 800,
+                     [pngPath, macClipboardJs, svgPath, pdfPath, wantVector ? "1" : "0"], 0.6, 0.97, 800,
                      function(code) {
                          removeFile(pngPath)
                          removeFile(svgPath)
+                         removeFile(pdfPath)
                          if (code === 0) {
-                             finishBusy("clipDone", [pngDpi])
+                             finishBusy(mac && wantVector ? "clipDoneVector" : "clipDone", [pngDpi])
+                         } else if (code === 3) {
+                             finishBusy("clipNoVector", [pngDpi])
                          } else {
                              failBusy(code === 127 ? "clipNoTool" : "clipFailed")
                          }
@@ -1759,6 +1798,100 @@ MuseScore {
     //  User interface
     // ------------------------------------------------------------------
 
+    // Toolbar group: a thin rounded frame with the group's name inside (suggested by scorster)
+    component ToolGroup: Rectangle {
+        id: group
+        default property alias content: groupRow.data
+        property string label: ""
+        implicitWidth: groupRow.implicitWidth + 12
+        implicitHeight: groupRow.implicitHeight + 8
+        radius: 4
+        color: "transparent"
+        border.color: ui.theme.strokeColor
+        border.width: 1
+
+        Row {
+            id: groupRow
+            x: 6
+            y: 4
+            spacing: 6
+
+            MU.StyledTextLabel {
+                visible: group.label !== ""
+                height: 30
+                verticalAlignment: Text.AlignVCenter
+                text: group.label
+            }
+        }
+    }
+
+    // Segmented toggle: touching segments, the chosen one in the accent color, so it does not
+    // look like separate push buttons (suggested by scorster). items: [{ text, value, enabled }]
+    component Segmented: Rectangle {
+        id: seg
+        property var items: []
+        property string current: ""
+        signal picked(string value)
+        implicitWidth: segRow.implicitWidth + 2
+        implicitHeight: 30
+        radius: 3
+        color: "transparent"
+        border.color: ui.theme.strokeColor
+        border.width: 1
+        clip: true
+
+        Row {
+            id: segRow
+            x: 1
+            y: 1
+
+            Repeater {
+                model: seg.items
+
+                Item {
+                    id: segment
+                    required property var modelData
+                    required property int index
+                    readonly property bool chosen: modelData.value === seg.current
+                    readonly property bool usable: modelData.enabled !== false
+                    width: Math.max(56, segText.implicitWidth + 24)
+                    height: seg.height - 2
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: segment.chosen ? ui.theme.accentColor : ui.theme.buttonColor
+                        opacity: segment.chosen
+                                 ? (segMouse.pressed ? ui.theme.accentOpacityHit
+                                    : segMouse.containsMouse ? ui.theme.accentOpacityHover : ui.theme.accentOpacityNormal)
+                                 : (segMouse.pressed ? ui.theme.buttonOpacityHit
+                                    : segMouse.containsMouse ? ui.theme.buttonOpacityHover : ui.theme.buttonOpacityNormal)
+                    }
+                    Rectangle {             // divider between segments
+                        visible: segment.index > 0
+                        width: 1
+                        height: parent.height
+                        color: ui.theme.strokeColor
+                    }
+                    Text {
+                        id: segText
+                        anchors.centerIn: parent
+                        text: segment.modelData.text
+                        color: ui.theme.fontPrimaryColor
+                        font: ui.theme.bodyFont
+                        opacity: segment.usable ? 1 : 0.4
+                    }
+                    MouseArea {
+                        id: segMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: segment.usable
+                        onClicked: seg.picked(segment.modelData.value)
+                    }
+                }
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: ui.theme.backgroundPrimaryColor
@@ -1818,40 +1951,26 @@ MuseScore {
             }
         }
 
-        // Toolbar: groups wrap to the next line as a whole when the window is narrow
+        // Toolbar: framed groups that wrap to the next line as a whole when the window is narrow
         Flow {
             Layout.fillWidth: true
-            spacing: 6              // between groups and between lines; groups add rightPadding
+            spacing: 8              // between groups and between lines
 
-            // Tools
-            Row {
-                spacing: 6
-                rightPadding: 14
+            // Tools: Select / Hand is a toggle, so it is drawn as one segmented control
+            ToolGroup {
+                label: root.t("toolsLabel")
 
-                MU.FlatButton {
-                    minWidth: 56
-                    text: root.t("toolSelect")
-                    accentButton: root.tool === "select"
-                    onClicked: root.tool = "select"
-                }
-                MU.FlatButton {
-                    minWidth: 56
-                    text: root.t("toolHand")
-                    accentButton: root.tool === "hand"
-                    onClicked: root.tool = "hand"
+                Segmented {
+                    items: [{ text: root.t("toolSelect"), value: "select" },
+                            { text: root.t("toolHand"), value: "hand" }]
+                    current: root.tool
+                    onPicked: function(value) { root.tool = value }
                 }
             }
 
             // View zoom
-            Row {
-                spacing: 6
-                rightPadding: 14
-
-                MU.StyledTextLabel {
-                    height: 30
-                    verticalAlignment: Text.AlignVCenter
-                    text: root.t("zoomLabel")
-                }
+            ToolGroup {
+                label: root.t("zoomLabel")
                 MU.FlatButton {
                     minWidth: 32
                     margins: 8
@@ -1957,42 +2076,28 @@ MuseScore {
 
             // Capture area: default (selection / title + first system), whole page, or the
             // area last drawn / adjusted by the user
-            Row {
-                spacing: 6
-                rightPadding: 14
+            ToolGroup {
+                label: root.t("areaLabel")
 
-                MU.StyledTextLabel {
-                    height: 30
-                    verticalAlignment: Text.AlignVCenter
-                    text: root.t("areaLabel")
-                }
-                MU.FlatButton {
-                    minWidth: 0
-                    text: root.t("areaDefault")
-                    enabled: root.ready
-                    accentButton: root.frameMode === "default"
-                    onClicked: root.restoreDefaultFrame()
-                }
-                MU.FlatButton {
-                    minWidth: 0
-                    text: root.t("wholePage")
-                    enabled: root.ready
-                    accentButton: root.frameMode === "page"
-                    onClicked: root.setWholePage()
-                }
-                MU.FlatButton {
-                    minWidth: 0
-                    text: root.t("areaCustom")
-                    enabled: root.ready && !!root.customFrame
-                    accentButton: root.frameMode === "custom"
-                    onClicked: root.restoreCustomFrame()
+                Segmented {
+                    items: [{ text: root.t("areaDefault"), value: "default", enabled: root.ready },
+                            { text: root.t("wholePage"), value: "page", enabled: root.ready },
+                            { text: root.t("areaCustom"), value: "custom", enabled: root.ready && !!root.customFrame }]
+                    current: root.frameMode
+                    onPicked: function(value) {
+                        if (value === "default") {
+                            root.restoreDefaultFrame()
+                        } else if (value === "page") {
+                            root.setWholePage()
+                        } else {
+                            root.restoreCustomFrame()
+                        }
+                    }
                 }
             }
 
             // Pages
-            Row {
-                spacing: 6
-                rightPadding: 14
+            ToolGroup {
 
                 MU.FlatButton {
                     minWidth: 32
