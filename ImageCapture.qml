@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.3"
+    version: "1.3.4"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -310,6 +310,7 @@ MuseScore {
             errPageInfo: "Could not read the page information.",
             errContinuous: "Please switch to Page view (View > Page view) and run the plugin again.",
             infoNoSelection: "No selection: the title and the first system are framed. Drag the frame from inside to move it, drag its edges to fine-tune.",
+            infoNotRange: "Only a range selection (measures) sets the frame, so the title and the first system are framed. Drag the frame from inside to move it, drag its edges to fine-tune.",
             prepSvg: "Preparing SVG...",
             copying: "Copying %1 to the destination folder...",
             saved: "%1 saved: %2",
@@ -370,6 +371,7 @@ MuseScore {
             errPageInfo: "Sayfa bilgisi okunamadı.",
             errContinuous: "Lütfen Sayfa görünümüne geçin (Görünüm > Sayfa görünümü) ve plugin'i yeniden çalıştırın.",
             infoNoSelection: "Seçim yok: başlık ve ilk sistem çerçevelendi. Çerçeveyi içinden tutup taşıyın, kenarlarından ince ayar yapın.",
+            infoNotRange: "Çerçeveyi yalnızca ölçü aralığı seçimi belirler; bu yüzden başlık ve ilk sistem çerçevelendi. Çerçeveyi içinden tutup taşıyın, kenarlarından ince ayar yapın.",
             prepSvg: "SVG hazırlanıyor...",
             copying: "%1 hedef klasöre kopyalanıyor...",
             saved: "%1 kaydedildi: %2",
@@ -430,6 +432,7 @@ MuseScore {
             errPageInfo: "Die Seiteninformationen konnten nicht gelesen werden.",
             errContinuous: "Bitte wechseln Sie zur Seitenansicht (Ansicht > Seitenansicht) und starten Sie das Plugin erneut.",
             infoNoSelection: "Keine Auswahl: Titel und erstes System sind eingerahmt. Verschieben Sie den Rahmen von innen und passen Sie ihn an den Kanten an.",
+            infoNotRange: "Nur eine Bereichsauswahl (Takte) bestimmt den Rahmen, daher sind Titel und erstes System eingerahmt. Verschieben Sie den Rahmen von innen und passen Sie ihn an den Kanten an.",
             prepSvg: "SVG wird vorbereitet...",
             copying: "%1 wird in den Zielordner kopiert...",
             saved: "%1 gespeichert: %2",
@@ -490,6 +493,7 @@ MuseScore {
             errPageInfo: "Impossible de lire les informations de la page.",
             errContinuous: "Veuillez passer en vue Page (Affichage > Vue Page) puis relancer le plugin.",
             infoNoSelection: "Aucune sélection : le titre et le premier système sont encadrés. Déplacez le cadre par l'intérieur et ajustez-le par les bords.",
+            infoNotRange: "Seule une sélection de plage (mesures) définit le cadre ; le titre et le premier système sont donc encadrés. Déplacez le cadre par l'intérieur et ajustez-le par les bords.",
             prepSvg: "Préparation du SVG...",
             copying: "Copie du %1 vers le dossier de destination...",
             saved: "%1 enregistré : %2",
@@ -550,6 +554,7 @@ MuseScore {
             errPageInfo: "No se pudo leer la información de la página.",
             errContinuous: "Cambie a la vista de página (Ver > Vista de página) y vuelva a ejecutar el complemento.",
             infoNoSelection: "Sin selección: se enmarcaron el título y el primer sistema. Mueva el marco arrastrándolo desde dentro y ajústelo por los bordes.",
+            infoNotRange: "Solo una selección de rango (compases) define el marco, así que se enmarcaron el título y el primer sistema. Mueva el marco arrastrándolo desde dentro y ajústelo por los bordes.",
             prepSvg: "Preparando SVG...",
             copying: "Copiando %1 a la carpeta de destino...",
             saved: "%1 guardado: %2",
@@ -610,6 +615,7 @@ MuseScore {
             errPageInfo: "Não foi possível ler as informações da página.",
             errContinuous: "Mude para a visualização de página (Exibir > Visualização de página) e execute o plugin novamente.",
             infoNoSelection: "Sem seleção: o título e o primeiro sistema foram enquadrados. Mova a moldura arrastando por dentro e ajuste-a pelas bordas.",
+            infoNotRange: "Só uma seleção de intervalo (compassos) define a moldura, por isso o título e o primeiro sistema foram enquadrados. Mova a moldura arrastando por dentro e ajuste-a pelas bordas.",
             prepSvg: "Preparando SVG...",
             copying: "Copiando %1 para a pasta de destino...",
             saved: "%1 salvo: %2",
@@ -723,56 +729,59 @@ MuseScore {
         return acc
     }
 
-    // Returns { rect: {x1,y1,x2,y2} (spatium), page, pageNo, warningKey } or { error: key }
+    // Returns { rect: {x1,y1,x2,y2} (spatium), page, pageNo, warningKey } or { error: key }.
+    // Only a range selection sets the frame. A single clicked element (often left selected by
+    // accident) would give a tiny frame, so it is treated like no selection.
     function analyzeSelection() {
         var sel = curScore.selection
+        if (!sel.isRange) {
+            return { error: sel.elements.length > 0 ? "infoNotRange" : "infoNoSelection" }
+        }
         var warningKey = ""
         var page = null
         var pageNo = -1
         var hRect = null   // horizontal extent (from measures)
         var vRect = null   // vertical extent (staves + elements)
 
-        if (sel.isRange) {
-            var startSeg = sel.startSegment
-            if (!startSeg) {
-                return { error: "errSelStart" }
+        var startSeg = sel.startSegment
+        if (!startSeg) {
+            return { error: "errSelStart" }
+        }
+        var endTick = sel.endSegment ? sel.endSegment.tick : (curScore.lastSegment.tick + 1)
+        var m = startSeg.parent
+        while (m && m.type !== Element.MEASURE) {
+            m = m.parent
+        }
+
+        for (; m && m.firstSegment.tick < endTick; m = m.nextMeasure) {
+            var mp = pageOf(m)
+            var mpNo = pageNumberOf(mp)
+            if (pageNo < 0) {
+                page = mp
+                pageNo = mpNo
+            } else if (mpNo !== pageNo) {
+                warningKey = "warnMultiPage"
+                continue
             }
-            var endTick = sel.endSegment ? sel.endSegment.tick : (curScore.lastSegment.tick + 1)
-            var m = startSeg.parent
-            while (m && m.type !== Element.MEASURE) {
-                m = m.parent
-            }
 
-            for (; m && m.firstSegment.tick < endTick; m = m.nextMeasure) {
-                var mp = pageOf(m)
-                var mpNo = pageNumberOf(mp)
-                if (pageNo < 0) {
-                    page = mp
-                    pageNo = mpNo
-                } else if (mpNo !== pageNo) {
-                    warningKey = "warnMultiPage"
-                    continue
-                }
+            var pos = m.pagePos
+            var bb = m.bbox
+            hRect = unite(hRect, pos.x + bb.x, pos.y + bb.y, bb.width, bb.height)
 
-                var pos = m.pagePos
-                var bb = m.bbox
-                hRect = unite(hRect, pos.x + bb.x, pos.y + bb.y, bb.width, bb.height)
-
-                var sys = m.parent
-                if (sys && sys.type === Element.SYSTEM) {
-                    var sp = sys.pagePos
-                    for (var s = sel.startStaff; s < sel.endStaff; ++s) {
-                        if (!sys.show(s)) {
-                            continue
-                        }
-                        var sb = sys.bbox(s)
-                        vRect = unite(vRect, pos.x + bb.x, sp.y + sb.y, bb.width, sb.height)
+            var sys = m.parent
+            if (sys && sys.type === Element.SYSTEM) {
+                var sp = sys.pagePos
+                for (var s = sel.startStaff; s < sel.endStaff; ++s) {
+                    if (!sys.show(s)) {
+                        continue
                     }
+                    var sb = sys.bbox(s)
+                    vRect = unite(vRect, pos.x + bb.x, sp.y + sb.y, bb.width, sb.height)
                 }
             }
         }
 
-        // All selected elements (notes, lyrics, dynamics, chord symbols, slurs...)
+        // Elements of the range (notes, lyrics, dynamics, chord symbols, slurs...) extend it vertically
         var els = sel.elements
         for (var i = 0; i < els.length; ++i) {
             var e = els[i]
@@ -792,9 +801,6 @@ MuseScore {
             var p = e.pagePos
             var b = e.bbox
             vRect = unite(vRect, p.x + b.x, p.y + b.y, b.width, b.height)
-            if (!sel.isRange) {
-                hRect = unite(hRect, p.x + b.x, p.y + b.y, b.width, b.height)
-            }
         }
 
         if (!page || !hRect) {
@@ -875,11 +881,11 @@ MuseScore {
             baseRect = a.rect
             refreshPreview()
             setStatus(a.warningKey)
-            Qt.callLater(fitCrop)
+            Qt.callLater(fitCropInitial)
         } else {
             showPage(0, true)
             setCropSvg(defaultRectSvg())
-            setStatus("infoNoSelection")
+            setStatus(a.error === "infoNotRange" ? "infoNotRange" : "infoNoSelection")
             Qt.callLater(fitWidth)
         }
         defaultPage = currentPage
@@ -903,7 +909,7 @@ MuseScore {
         baseRect = Object.assign({}, defaultBaseRect)
         wholePageMode = false
         refreshPreview()
-        Qt.callLater(fitCrop)
+        Qt.callLater(fitCropInitial)
     }
 
     // Area covered by a system (spatium): union of its measures / frames (incl. title box).
@@ -1090,15 +1096,15 @@ MuseScore {
         zoomAt(factor, flick.width / 2, flick.height / 2)
     }
 
-    // Fits a rectangle (SVG units) into the viewer and centers it
-    function fitRect(r, extra) {
+    // Fits a rectangle (SVG units) into the viewer and centers it (zoom at most zMax, if given)
+    function fitRect(r, extra, zMax) {
         if (!ready || flick.width <= 0 || flick.height <= 0) {
             return
         }
         var availW = flick.width - 2 * viewPad
         var availH = flick.height - 2 * viewPad
         var z = Math.min(availW / (r.w * extra * pxPerUnitAt100), availH / (r.h * extra * pxPerUnitAt100))
-        zoom = Math.max(minZoom, Math.min(maxZoom, z))
+        zoom = Math.max(minZoom, Math.min(zMax > 0 ? zMax : maxZoom, z))
         flick.contentX = viewPad + (r.x + r.w / 2) * k - flick.width / 2
         flick.contentY = viewPad + (r.y + r.h / 2) * k - flick.height / 2
         clampView()
@@ -1111,6 +1117,14 @@ MuseScore {
     function fitCrop() {
         if (cropNow) {
             fitRect(cropNow, 1.3)
+        }
+    }
+
+    // Initial view of a (small) selection: not closer than 300 % so its surroundings stay visible
+    readonly property real initialMaxZoom: 3.0
+    function fitCropInitial() {
+        if (cropNow) {
+            fitRect(cropNow, 1.3, initialMaxZoom)
         }
     }
 
@@ -1373,16 +1387,36 @@ MuseScore {
                  0.6, 0.97, 1500, done)
     }
 
-    // Linux: wl-copy (Wayland) or xclip (X11); macOS: osascript. Both clipboard tools fork and
-    // keep serving the clipboard in the background after reading the whole file.
+    // macOS: AppKit's NSPasteboard via JavaScript for Automation (osascript -l JavaScript), with
+    // PNG and TIFF representations so every app finds one it accepts. macOS is checked first so
+    // an xclip from Homebrew / XQuartz does not copy to the X11 clipboard instead. The script is
+    // ASCII only and passed as an argument: AppleScript's «class PNGf» could be misread when
+    // MuseScore is started from the Finder without a UTF-8 locale.
+    readonly property string macClipboardJs:
+        'ObjC.import("AppKit");'
+        + 'function run(argv) {'
+        + ' var png = $.NSData.dataWithContentsOfFile(argv[0]);'
+        + ' if (png.isNil()) { throw new Error("cannot read " + argv[0]); }'
+        + ' var img = $.NSImage.alloc.initWithData(png);'
+        + ' if (img.isNil()) { throw new Error("not an image"); }'
+        + ' var item = $.NSPasteboardItem.alloc.init;'
+        + ' item.setDataForType(png, $.NSPasteboardTypePNG);'
+        + ' item.setDataForType(img.TIFFRepresentation, $.NSPasteboardTypeTIFF);'
+        + ' var pb = $.NSPasteboard.generalPasteboard;'
+        + ' pb.clearContents;'
+        + ' if (!pb.writeObjects($([item]))) { throw new Error("pasteboard write failed"); }'
+        + '}'
+
+    // Linux: wl-copy (Wayland) or xclip (X11). Both fork and keep serving the clipboard in the
+    // background after reading the whole file. macOS: see macClipboardJs.
     function copyPngToClipboard(pngPath) {
         setProgress(0.6, "clipCopying")
         if (Qt.platform.os !== "windows") {
-            runShell('if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
+            runShell('if [ "$(uname)" = Darwin ]; then osascript -l JavaScript -e "$2" "$1" >/dev/null;'
+                     + ' elif [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
                      + ' elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -t image/png -i "$1" >/dev/null 2>&1;'
-                     + ' elif command -v osascript >/dev/null 2>&1; then osascript -e "set the clipboard to (read (POSIX file \\"$1\\") as «class PNGf»)";'
                      + ' else exit 127; fi',
-                     [pngPath], 0.6, 0.97, 800,
+                     [pngPath, macClipboardJs], 0.6, 0.97, 800,
                      function(code) {
                          removeFile(pngPath)
                          if (code === 0) {
@@ -1811,12 +1845,26 @@ MuseScore {
                         asynchronous: false
                         smooth: true
                         fillMode: Image.Stretch
-                        // Sharp at screen resolution; capped at 8192 px to avoid huge textures
+                        // Sharp at screen resolution, but the whole page is one image: capped at 8192 px
+                        // and 20 Mpixel (80 MB). At 800 % an A4 page would be ~190 MB, which Qt does
+                        // not load (the page stayed blank). Above the cap the view is slightly soft.
                         readonly property real dpr: Screen.devicePixelRatio > 0 ? Screen.devicePixelRatio : 1
-                        readonly property real renderScale: Math.min(root.renderZoom * root.pxPerUnitAt100 * dpr,
-                                                                     8192 / Math.max(1, root.svgPageW, root.svgPageH))
+                        readonly property real maxPixels: 20e6
+                        // Halved each time a render fails, so the page never stays blank
+                        property real fallback: 1.0
+                        readonly property real renderScale: fallback * Math.min(
+                            root.renderZoom * root.pxPerUnitAt100 * dpr,
+                            8192 / Math.max(1, root.svgPageW, root.svgPageH),
+                            Math.sqrt(maxPixels / Math.max(1, root.svgPageW * root.svgPageH)))
                         sourceSize: Qt.size(Math.max(1, Math.round(root.svgPageW * renderScale)),
                                             Math.max(1, Math.round(root.svgPageH * renderScale)))
+                        onStatusChanged: {
+                            if (status === Image.Error && source != "" && fallback > 0.1) {
+                                console.warn("ImageCapture: page preview failed at " + sourceSize.width + " x "
+                                             + sourceSize.height + " px, retrying smaller")
+                                fallback /= 2
+                            }
+                        }
                     }
 
                     // Dim everything outside the frame (on the paper only)

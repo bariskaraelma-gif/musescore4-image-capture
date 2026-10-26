@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.4 — 2026-10-26
+
+- A single selected element (for example a time signature or a note that was left selected) no longer sets the frame. Only a range selection of measures does; otherwise the title and the first system are framed, as without a selection. Before, the frame shrank around the tiny element and the view zoomed to 800 %.
+- The initial view zooms in at most to 300 %, so a small range selection is shown with its surroundings. **Fit frame** and Ctrl + wheel still go up to 800 %.
+- The page preview no longer stays blank at high zoom. The whole page was rendered as one image of about 190 MB at 800 %, which Qt did not load. The preview is now limited to 20 megapixels (slightly softer at the highest zoom levels) and is rendered smaller if loading still fails. Saved files are not affected.
+- macOS: **Copy to clipboard** reworked. The image is now put on the clipboard through AppKit (`osascript -l JavaScript`) as PNG and TIFF, instead of an AppleScript command whose `«class PNGf»` could be misread when MuseScore is started from the Finder. macOS is detected first, so an `xclip` installed with Homebrew / XQuartz is no longer used by mistake. Thanks to scorster on the musescore.org forum.
+
 ## 1.3.3 — 2026-10-18
 
 - Linux: Ctrl + mouse wheel zooms the page view again (before, it only scrolled the page). Thanks to the Ubuntu 22.04 tester on the musescore.org forum.

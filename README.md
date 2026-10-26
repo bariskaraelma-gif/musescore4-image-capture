@@ -10,7 +10,7 @@ Brings back MuseScore 3's **Image Capture** tool, which was removed in MuseScore
 
 - **Opens with the right frame**
   - With a range selection, the frame starts around the selection.
-  - Without a selection, it frames the title and the first system.
+  - Without a range selection, it frames the title and the first system. A single selected element (e.g. a note or a time signature) is ignored.
 - **Page viewer**
   - The whole page is shown; use `<` / `>` to switch pages.
   - Zoom with `−` / `+` or Ctrl + mouse wheel. Fit page and Fit frame buttons.
@@ -87,7 +87,7 @@ No network access, no data collection. Temporary files are written to your temp 
 - Works in **Page view** only, not in Continuous view.
 - If a selection spans several pages, only the part on the first page is used.
 - The clipboard image has no transparency.
-- Linux support for PDF, TIFF and clipboard is new in v1.3 and has been confirmed on Ubuntu; macOS has not been tested yet. Ubuntu's Chromium snap cannot be used for PDF (snap confinement), so install `librsvg2-bin`. With the Flatpak version of MuseScore, the helper tools on the host system may not be reachable.
+- Linux support for PDF, TIFF and clipboard is new in v1.3 and has been confirmed on Ubuntu (clipboard on X11 and Wayland). On macOS the clipboard was reworked in v1.3.4 and still needs confirmation from a Mac user. Ubuntu's Chromium snap cannot be used for PDF (snap confinement), so install `librsvg2-bin`. With the Flatpak version of MuseScore, the helper tools on the host system may not be reachable.
 - A cropped SVG still contains the whole page outside the visible area, so its file size is that of the full page.
 
 ## About this project
@@ -112,7 +112,7 @@ MuseScore 4'te kaldırılan, MuseScore 3'teki **Görüntü Yakalama** aracını 
 
 ### Özellikler
 
-- **Açılış:** Ölçü seçiliyse çerçeve seçimin çevresinde açılır. Seçim yoksa başlık ve ilk sistem çerçevelenir.
+- **Açılış:** Ölçü seçiliyse çerçeve seçimin çevresinde açılır. Ölçü aralığı seçimi yoksa başlık ve ilk sistem çerçevelenir; tek başına seçili bir öğe (nota, ölçü işareti vb.) dikkate alınmaz.
 - **Görüntüleyici:** Tam sayfa görünür. `−` / `+` veya Ctrl + tekerlek ile yakınlaştırılır, `<` / `>` ile sayfa değiştirilir.
 - **Çerçeve**
   - İçinden tutup taşınır, kenar ve köşelerinden boyutlandırılır.
