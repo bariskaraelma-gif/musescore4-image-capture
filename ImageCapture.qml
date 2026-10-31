@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.7"
+    version: "1.3.8"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -1611,7 +1611,14 @@ MuseScore {
         + '}'
 
     // Linux: wl-copy (Wayland) or xclip (X11). Both fork and keep serving the clipboard in the
-    // background after reading the whole file. macOS: see macClipboardJs.
+    // background after reading the whole file. Some compositors (ChromeOS / Crostini's sommelier)
+    // keep wl-copy in the foreground, so it never returns: each tool gets 5 s (`timeout`), then
+    // the next one is tried; on ChromeOS xclip (via XWayland) is tried before wl-copy. A hanging
+    // tool must not keep the shell alive, because the plugin's QProcess cannot be killed and
+    // later saves (and MuseScore's Quit) would wait for it. The tool is started with only
+    // stdin / stdout / stderr open (closed in bash, which unlike dash handles fds above 9): it
+    // inherits MuseScore's open files, and an AppImage cannot exit while its mount is held open
+    // by the background clipboard server. macOS: see macClipboardJs.
     function copyPngToClipboard(pngPath) {
         setProgress(0.6, "clipCopying")
         if (Qt.platform.os !== "windows") {
@@ -1626,9 +1633,17 @@ MuseScore {
                      + '  rsvg-convert -f pdf -o "$4" "$3" >/dev/null 2>&1 || rm -f "$4"; fi;'
                      + ' r=$(osascript -l JavaScript -e "$2" "$1" "$3" "$4" "$5") || exit 1;'
                      + ' [ "$r" = novector ] && exit 3; exit 0;'
-                     + ' elif [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then wl-copy --type image/png < "$1" >/dev/null 2>&1;'
-                     + ' elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard -t image/png -i "$1" >/dev/null 2>&1;'
-                     + ' else exit 127; fi',
+                     + ' fi;'
+                     + ' f="$1"; t=; found=; timeout 1 true >/dev/null 2>&1 && t="timeout 5";'
+                     + ' cl=\'exec 2>/dev/null; for d in /proc/$$/fd/*; do n=${d##*/};'
+                     + ' [ "$n" -gt 2 ] && eval "exec $n>&-"; done; exec "$@"\';'
+                     + ' run() { if command -v bash >/dev/null 2>&1; then $t bash -c "$cl" sh "$@"; else $t "$@"; fi; };'
+                     + ' wl() { [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1 || return 1;'
+                     + '  found=1; run wl-copy --type image/png < "$f" >/dev/null 2>&1; };'
+                     + ' xc() { command -v xclip >/dev/null 2>&1 || return 1;'
+                     + '  found=1; run xclip -selection clipboard -t image/png -i "$f" >/dev/null 2>&1; };'
+                     + ' if [ -n "$SOMMELIER_VERSION" ]; then xc || wl; else wl || xc; fi && exit 0;'
+                     + ' [ -n "$found" ] && exit 1; exit 127',
                      [pngPath, macClipboardJs, svgPath, pdfPath, wantVector ? "1" : "0"], 0.6, 0.97, 800,
                      function(code) {
                          removeFile(pngPath)

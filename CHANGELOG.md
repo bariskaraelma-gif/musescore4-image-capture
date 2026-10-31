@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.8 — 2026-10-31
+
+Report from Marc Sabatella on the musescore.org forum (ChromeOS, Debian 12 container), with help from graffesmusic:
+
+- Linux: **Copy to clipboard** no longer hangs. On ChromeOS's Wayland compositor `wl-copy` can stay in the foreground instead of forking, so the plugin waited a minute and failed; after that, saves could hang too and MuseScore's Close / Quit stopped working until the process was killed. Now each clipboard tool gets at most 5 seconds and then the next one is tried, and on ChromeOS `xclip` (through XWayland) is tried before `wl-copy`.
+- Linux (AppImage): after **Copy to clipboard**, MuseScore now exits completely when closed. The clipboard tool keeps running in the background to serve the clipboard, and it inherited MuseScore's open files, including the AppImage's mount, so the AppImage process stayed alive until something else was copied. The tool is now started without them (needs `bash`, which every common distribution has).
+
 ## 1.3.7 — 2026-10-27
 
 Suggestions and a report from scorster on the musescore.org forum:
