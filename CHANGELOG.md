@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.9 — 2026-11-08
+
+Feedback from Marc Sabatella on the musescore.org forum (1.3.8 works on both of his ChromeOS machines):
+
+- Linux / ChromeOS: `wl-copy` does not work at all on ChromeOS (it hangs before touching the clipboard), so the plugin now uses only `xclip` there instead of falling back to `wl-copy`. If `xclip` is missing, it says so at once (`sudo apt install xclip`) instead of waiting and failing.
+- Linux: each clipboard tool now gets up to 20 seconds instead of 5, so a legitimately slow copy (a busy machine, a very large image) is not cut off. Normally `wl-copy` and `xclip` return at once; the limit only matters for a tool that hangs.
+
 ## 1.3.8 — 2026-10-31
 
 Report from Marc Sabatella on the musescore.org forum (ChromeOS, Debian 12 container), with help from graffesmusic:

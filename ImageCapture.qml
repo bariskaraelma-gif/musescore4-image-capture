@@ -53,7 +53,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.8"
+    version: "1.3.9"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -342,6 +342,7 @@ MuseScore {
             pngGrabFailed: "Could not capture the image for the %1.",
             pngRenderFailed: "Could not render the SVG for the %1.",
             clipNoTool: "Copying to the clipboard needs wl-clipboard (Wayland) or xclip (X11). Install one, e.g. sudo apt install wl-clipboard xclip",
+            clipNoXclip: "On ChromeOS copying to the clipboard needs xclip. Install it: sudo apt install xclip",
             clipCopying: "Copying to the clipboard...",
             clipDone: "Image copied to the clipboard (%1 dpi). You can paste it into Word, an e-mail, etc.",
             clipFailed: "Could not copy to the clipboard.",
@@ -409,6 +410,7 @@ MuseScore {
             pngGrabFailed: "%1 için görüntü yakalanamadı.",
             pngRenderFailed: "%1 için SVG render edilemedi.",
             clipNoTool: "Panoya kopyalamak için wl-clipboard (Wayland) veya xclip (X11) gerekli. Örn.: sudo apt install wl-clipboard xclip",
+            clipNoXclip: "ChromeOS'ta panoya kopyalamak için xclip gerekli. Kurun: sudo apt install xclip",
             clipCopying: "Panoya kopyalanıyor...",
             clipDone: "Görüntü panoya kopyalandı (%1 dpi). Word, e-posta vb. yere yapıştırabilirsiniz.",
             clipFailed: "Panoya kopyalanamadı.",
@@ -476,6 +478,7 @@ MuseScore {
             pngGrabFailed: "Das Bild für die %1-Datei konnte nicht erfasst werden.",
             pngRenderFailed: "Das SVG konnte für die %1-Datei nicht gerendert werden.",
             clipNoTool: "Für die Zwischenablage wird wl-clipboard (Wayland) oder xclip (X11) benötigt, z. B.: sudo apt install wl-clipboard xclip",
+            clipNoXclip: "Unter ChromeOS wird für die Zwischenablage xclip benötigt. Installieren: sudo apt install xclip",
             clipCopying: "Wird in die Zwischenablage kopiert...",
             clipDone: "Bild in die Zwischenablage kopiert (%1 dpi). Sie können es in Word, E-Mails usw. einfügen.",
             clipFailed: "Kopieren in die Zwischenablage fehlgeschlagen.",
@@ -543,6 +546,7 @@ MuseScore {
             pngGrabFailed: "Impossible de capturer l'image pour le %1.",
             pngRenderFailed: "Impossible de générer le SVG pour le %1.",
             clipNoTool: "La copie dans le presse-papiers nécessite wl-clipboard (Wayland) ou xclip (X11), p. ex. : sudo apt install wl-clipboard xclip",
+            clipNoXclip: "Sous ChromeOS, la copie dans le presse-papiers nécessite xclip. Installez-le : sudo apt install xclip",
             clipCopying: "Copie dans le presse-papiers...",
             clipDone: "Image copiée dans le presse-papiers (%1 dpi). Vous pouvez la coller dans Word, un e-mail, etc.",
             clipFailed: "Impossible de copier dans le presse-papiers.",
@@ -610,6 +614,7 @@ MuseScore {
             pngGrabFailed: "No se pudo capturar la imagen para el %1.",
             pngRenderFailed: "No se pudo renderizar el SVG para el %1.",
             clipNoTool: "Para copiar al portapapeles se necesita wl-clipboard (Wayland) o xclip (X11), p. ej.: sudo apt install wl-clipboard xclip",
+            clipNoXclip: "En ChromeOS, para copiar al portapapeles se necesita xclip. Instálelo: sudo apt install xclip",
             clipCopying: "Copiando al portapapeles...",
             clipDone: "Imagen copiada al portapapeles (%1 dpi). Puede pegarla en Word, un correo, etc.",
             clipFailed: "No se pudo copiar al portapapeles.",
@@ -677,6 +682,7 @@ MuseScore {
             pngGrabFailed: "Não foi possível capturar a imagem para o %1.",
             pngRenderFailed: "Não foi possível renderizar o SVG para o %1.",
             clipNoTool: "Para copiar para a área de transferência é necessário o wl-clipboard (Wayland) ou o xclip (X11), ex.: sudo apt install wl-clipboard xclip",
+            clipNoXclip: "No ChromeOS, para copiar para a área de transferência é necessário o xclip. Instale-o: sudo apt install xclip",
             clipCopying: "Copiando para a área de transferência...",
             clipDone: "Imagem copiada para a área de transferência (%1 dpi). Você pode colá-la no Word, em um e-mail etc.",
             clipFailed: "Não foi possível copiar para a área de transferência.",
@@ -1612,8 +1618,9 @@ MuseScore {
 
     // Linux: wl-copy (Wayland) or xclip (X11). Both fork and keep serving the clipboard in the
     // background after reading the whole file. Some compositors (ChromeOS / Crostini's sommelier)
-    // keep wl-copy in the foreground, so it never returns: each tool gets 5 s (`timeout`), then
-    // the next one is tried; on ChromeOS xclip (via XWayland) is tried before wl-copy. A hanging
+    // keep wl-copy in the foreground, so it never returns: each tool gets 20 s (`timeout`; normally
+    // they return at once), then the next one is tried. On ChromeOS wl-copy does not work at all,
+    // so only xclip (via XWayland) is used there. A hanging
     // tool must not keep the shell alive, because the plugin's QProcess cannot be killed and
     // later saves (and MuseScore's Quit) would wait for it. The tool is started with only
     // stdin / stdout / stderr open (closed in bash, which unlike dash handles fds above 9): it
@@ -1634,7 +1641,7 @@ MuseScore {
                      + ' r=$(osascript -l JavaScript -e "$2" "$1" "$3" "$4" "$5") || exit 1;'
                      + ' [ "$r" = novector ] && exit 3; exit 0;'
                      + ' fi;'
-                     + ' f="$1"; t=; found=; timeout 1 true >/dev/null 2>&1 && t="timeout 5";'
+                     + ' f="$1"; t=; found=; timeout 1 true >/dev/null 2>&1 && t="timeout 20";'
                      + ' cl=\'exec 2>/dev/null; for d in /proc/$$/fd/*; do n=${d##*/};'
                      + ' [ "$n" -gt 2 ] && eval "exec $n>&-"; done; exec "$@"\';'
                      + ' run() { if command -v bash >/dev/null 2>&1; then $t bash -c "$cl" sh "$@"; else $t "$@"; fi; };'
@@ -1642,8 +1649,8 @@ MuseScore {
                      + '  found=1; run wl-copy --type image/png < "$f" >/dev/null 2>&1; };'
                      + ' xc() { command -v xclip >/dev/null 2>&1 || return 1;'
                      + '  found=1; run xclip -selection clipboard -t image/png -i "$f" >/dev/null 2>&1; };'
-                     + ' if [ -n "$SOMMELIER_VERSION" ]; then xc || wl; else wl || xc; fi && exit 0;'
-                     + ' [ -n "$found" ] && exit 1; exit 127',
+                     + ' if [ -n "$SOMMELIER_VERSION" ]; then xc && exit 0; [ -n "$found" ] && exit 1; exit 4; fi;'
+                     + ' wl || xc && exit 0; [ -n "$found" ] && exit 1; exit 127',
                      [pngPath, macClipboardJs, svgPath, pdfPath, wantVector ? "1" : "0"], 0.6, 0.97, 800,
                      function(code) {
                          removeFile(pngPath)
@@ -1654,7 +1661,7 @@ MuseScore {
                          } else if (code === 3) {
                              finishBusy("clipNoVector", [pngDpi])
                          } else {
-                             failBusy(code === 127 ? "clipNoTool" : "clipFailed")
+                             failBusy(code === 127 ? "clipNoTool" : code === 4 ? "clipNoXclip" : "clipFailed")
                          }
                      })
             return
