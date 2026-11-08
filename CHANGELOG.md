@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 — 2026-11-09
+
+Inspired by Marc Sabatella's idea on the musescore.org forum of a dialog-free version for blind musicians:
+
+- New plugin **Image Capture – Quick Copy**: copies to the clipboard without any dialog, so it can be run from a keyboard shortcut (plugin dialogs cannot be used with the keyboard or a screen reader). A range selection copies the selected bars; a single selected element copies its whole page, and no selection the first page, with the empty margins trimmed. A small window shows the progress and closes by itself.
+- New option **Hide neighbouring bars** (on by default, shared with Quick Copy): where a range selection starts or ends in the middle of a system, the bars next to it are covered with white, in the preview and in every output. Marks of the neighbouring bars that reach into the selection (e.g. the next bar's rehearsal mark) are hidden too. It cannot be combined with a transparent background; of the two, the one clicked last is used.
+- The default frame of a range selection now ends exactly at the barline where the selection starts or ends inside a system (the start barline is included), and it includes marks of the selection that reach across the barline, such as a rehearsal mark centred on it.
+- The selection code is shared by both plugins in `ImageCaptureCore.js`, which must stay in the plugin folder.
+- Not yet tested on Linux and macOS.
+
 ## 1.3.9 — 2026-11-08
 
 Feedback from Marc Sabatella on the musescore.org forum (1.3.8 works on both of his ChromeOS machines):

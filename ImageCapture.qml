@@ -48,12 +48,14 @@ import Muse.UiComponents as MU
 import MuseScore 3.0
 import FileIO 3.0
 
+import "ImageCaptureCore.js" as Core
+
 MuseScore {
     id: root
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.3.9"
+    version: "1.4.0"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true
@@ -79,6 +81,7 @@ MuseScore {
     property string outFormat: "png"     // jpg, pdf, png, svg, tif
     property string lastDir: ""
     property string uiLang: ""           // "" = follow MuseScore's UI language
+    property bool hideNeighbours: true   // hide the bars next to a range selection (shared with Quick Copy)
 
     // Working state
     property string tmpDir: ""
@@ -93,6 +96,17 @@ MuseScore {
     property string previewPath: ""
     property int previewSerial: 0
     property bool ready: false
+
+    // Range selection (analyzeSelection) and its page index, for hiding the neighbouring bars
+    property var selInfo: null
+    property int selPage: -1
+    readonly property bool hideBlocked: transparentBg && formatHasAlpha
+    readonly property bool hideActive: hideNeighbours && !!selInfo && !hideBlocked
+    onHideActiveChanged: {
+        if (ready) {
+            showPage(currentPage, true)
+        }
+    }
 
     // Status line: stored as a translation key + arguments so it re-translates on language change
     property string statusKey: ""
@@ -147,6 +161,7 @@ MuseScore {
         property alias outFormat: root.outFormat
         property alias lastDir: root.lastDir
         property alias uiLang: root.uiLang
+        property alias hideNeighbours: root.hideNeighbours
     }
 
     onRun: {
@@ -316,6 +331,7 @@ MuseScore {
             save: "Save...",
             pngDpi: "Resolution (dpi):",
             transparent: "Transparent background",
+            hideNeighbours: "Hide neighbouring bars",
             reread: "Re-read selection",
             resetMargins: "Reset margins",
             close: "Close",
@@ -384,6 +400,7 @@ MuseScore {
             save: "Kaydet...",
             pngDpi: "Çözünürlük (dpi):",
             transparent: "Saydam arka plan",
+            hideNeighbours: "Komşu ölçüleri gizle",
             reread: "Seçimi yeniden oku",
             resetMargins: "Boşlukları sıfırla",
             close: "Kapat",
@@ -452,6 +469,7 @@ MuseScore {
             save: "Speichern...",
             pngDpi: "Auflösung (dpi):",
             transparent: "Transparenter Hintergrund",
+            hideNeighbours: "Nachbartakte ausblenden",
             reread: "Auswahl neu einlesen",
             resetMargins: "Ränder zurücksetzen",
             close: "Schließen",
@@ -520,6 +538,7 @@ MuseScore {
             save: "Enregistrer...",
             pngDpi: "Résolution (dpi) :",
             transparent: "Arrière-plan transparent",
+            hideNeighbours: "Masquer les mesures voisines",
             reread: "Relire la sélection",
             resetMargins: "Réinitialiser les marges",
             close: "Fermer",
@@ -588,6 +607,7 @@ MuseScore {
             save: "Guardar...",
             pngDpi: "Resolución (dpi):",
             transparent: "Fondo transparente",
+            hideNeighbours: "Ocultar compases vecinos",
             reread: "Volver a leer la selección",
             resetMargins: "Restablecer márgenes",
             close: "Cerrar",
@@ -656,6 +676,7 @@ MuseScore {
             save: "Salvar...",
             pngDpi: "Resolução (dpi):",
             transparent: "Fundo transparente",
+            hideNeighbours: "Ocultar compassos vizinhos",
             reread: "Reler a seleção",
             resetMargins: "Redefinir margens",
             close: "Fechar",
@@ -750,128 +771,26 @@ MuseScore {
     //  Rectangle from the selection
     // ------------------------------------------------------------------
 
+    // Shared with Quick Copy: see ImageCaptureCore.js
     function pageOf(e) {
-        var p = e
-        for (var guard = 0; p && guard < 30; ++guard) {
-            if (p.type === Element.PAGE) {
-                return p
-            }
-            p = p.parent
-        }
-        return null
+        return Core.pageOf(e, Element)
     }
 
     function pageNumberOf(page) {
-        if (!page) {
-            return -1
-        }
-        if (page.pageNumber !== undefined) {
-            return page.pageNumber
-        }
-        return page.pagenumber
+        return Core.pageNumberOf(page)
     }
 
     function unite(acc, x, y, w, h) {
-        if (!(w > 0) && !(h > 0)) {
-            return acc
-        }
-        if (!acc) {
-            return { x1: x, y1: y, x2: x + w, y2: y + h }
-        }
-        acc.x1 = Math.min(acc.x1, x)
-        acc.y1 = Math.min(acc.y1, y)
-        acc.x2 = Math.max(acc.x2, x + w)
-        acc.y2 = Math.max(acc.y2, y + h)
-        return acc
+        return Core.unite(acc, x, y, w, h)
     }
 
-    // Returns { rect: {x1,y1,x2,y2} (spatium), page, pageNo, warningKey } or { error: key }.
-    // Only a range selection sets the frame. A single clicked element (often left selected by
-    // accident) would give a tiny frame, so it is treated like no selection.
+    function systemRect(s) {
+        return Core.systemRect(s)
+    }
+
+    // Returns { rect: {x1,y1,x2,y2} (spatium), page, pageNo, warningKey, ... } or { error: key }
     function analyzeSelection() {
-        var sel = curScore.selection
-        if (!sel.isRange) {
-            return { error: sel.elements.length > 0 ? "infoNotRange" : "infoNoSelection" }
-        }
-        var warningKey = ""
-        var page = null
-        var pageNo = -1
-        var hRect = null   // horizontal extent (from measures)
-        var vRect = null   // vertical extent (staves + elements)
-
-        var startSeg = sel.startSegment
-        if (!startSeg) {
-            return { error: "errSelStart" }
-        }
-        var endTick = sel.endSegment ? sel.endSegment.tick : (curScore.lastSegment.tick + 1)
-        var m = startSeg.parent
-        while (m && m.type !== Element.MEASURE) {
-            m = m.parent
-        }
-
-        for (; m && m.firstSegment.tick < endTick; m = m.nextMeasure) {
-            var mp = pageOf(m)
-            var mpNo = pageNumberOf(mp)
-            if (pageNo < 0) {
-                page = mp
-                pageNo = mpNo
-            } else if (mpNo !== pageNo) {
-                warningKey = "warnMultiPage"
-                continue
-            }
-
-            var pos = m.pagePos
-            var bb = m.bbox
-            hRect = unite(hRect, pos.x + bb.x, pos.y + bb.y, bb.width, bb.height)
-
-            var sys = m.parent
-            if (sys && sys.type === Element.SYSTEM) {
-                var sp = sys.pagePos
-                for (var s = sel.startStaff; s < sel.endStaff; ++s) {
-                    if (!sys.show(s)) {
-                        continue
-                    }
-                    var sb = sys.bbox(s)
-                    vRect = unite(vRect, pos.x + bb.x, sp.y + sb.y, bb.width, sb.height)
-                }
-            }
-        }
-
-        // Elements of the range (notes, lyrics, dynamics, chord symbols, slurs...) extend it vertically
-        var els = sel.elements
-        for (var i = 0; i < els.length; ++i) {
-            var e = els[i]
-            if (!e || e.visible === false) {
-                continue
-            }
-            var ep = pageOf(e)
-            if (!ep) {
-                continue
-            }
-            if (pageNo < 0) {
-                page = ep
-                pageNo = pageNumberOf(ep)
-            } else if (pageNumberOf(ep) !== pageNo) {
-                continue
-            }
-            var p = e.pagePos
-            var b = e.bbox
-            vRect = unite(vRect, p.x + b.x, p.y + b.y, b.width, b.height)
-        }
-
-        if (!page || !hRect) {
-            return { error: "noSelection" }
-        }
-        if (!vRect) {
-            vRect = hRect
-        }
-
-        return {
-            rect: { x1: hRect.x1, x2: hRect.x2, y1: vRect.y1, y2: vRect.y2 },
-            page: page,
-            pageNo: pageNo,
-            warningKey: warningKey
-        }
+        return Core.analyzeSelection(curScore, Element)
     }
 
     // ------------------------------------------------------------------
@@ -930,11 +849,19 @@ MuseScore {
 
         pageSvgs = svgs
         pageCount = n
+        selInfo = hasSelection ? a : null
+        selPage = hasSelection ? Math.min(a.pageNo, n - 1) : -1
         ready = true
 
         if (hasSelection) {
             showPage(Math.min(a.pageNo, n - 1), true)
             baseRect = a.rect
+            if (a.clipX1 !== null) {
+                baseRect.x1 = a.clipX1 + marginLeft
+            }
+            if (a.clipX2 !== null) {
+                baseRect.x2 = a.clipX2 - marginRight
+            }
             refreshPreview()
             setStatus(a.warningKey)
             Qt.callLater(fitCropInitial)
@@ -989,28 +916,6 @@ MuseScore {
         Qt.callLater(fitCropInitial)
     }
 
-    // Area covered by a system (spatium): union of its measures / frames (incl. title box).
-    // Note: System.bbox is empty in the API, so it is computed from the measures.
-    function systemRect(s) {
-        var acc = null
-        var mbs = s.measures
-        for (var i = 0; mbs && i < mbs.length; ++i) {
-            var m = mbs[i]
-            if (!m) {
-                continue
-            }
-            var p = m.pagePos
-            var b = m.bbox
-            acc = unite(acc, p.x + b.x, p.y + b.y, b.width, b.height)
-        }
-        if (!acc) {
-            var sp = s.pagePos
-            var sb = s.bbox
-            acc = unite(acc, sp.x + sb.x, sp.y + sb.y, sb.width, sb.height)
-        }
-        return acc
-    }
-
     // Default frame without a selection: title box + first music system on page 1.
     // The bottom edge is halfway between the first system and the next one.
     function defaultRectSvg() {
@@ -1060,10 +965,13 @@ MuseScore {
             return
         }
         currentPage = index
-        pageSvg = pageSvgs[index]
-        var vb = parseViewBox(pageSvg)
+        var vb = parseViewBox(pageSvgs[index])
         svgPageW = vb.w
         svgPageH = vb.h
+        // With "Hide neighbouring bars" the white rectangles are part of the page, so the
+        // preview and every output (PNG, SVG, PDF, clipboard) show the same
+        pageSvg = hideActive && index === selPage ? Core.withHidden(pageSvgs[index], selInfo, unitsPerSp, vb.w)
+                                                  : pageSvgs[index]
 
         if (previewPath) {
             removeFile(previewPath)
@@ -2116,6 +2024,24 @@ MuseScore {
                         }
                     }
                 }
+                // Only with a range selection. The white covers do not work on a transparent
+                // background, so of the two the one clicked last wins
+                MU.CheckBox {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.t("hideNeighbours")
+                    enabled: root.ready && !!root.selInfo
+                    checked: root.hideActive
+                    onClicked: {
+                        if (root.hideActive) {
+                            root.hideNeighbours = false
+                        } else {
+                            root.hideNeighbours = true
+                            if (root.formatHasAlpha) {
+                                root.transparentBg = false
+                            }
+                        }
+                    }
+                }
             }
 
             // Pages
@@ -2537,6 +2463,7 @@ MuseScore {
                 onActivated: function(index, value) { root.pngDpi = value }
             }
             Item { width: 4; height: 1 }
+            // Turning it on turns hiding off (hideActive), without changing Quick Copy's setting
             MU.CheckBox {
                 text: root.t("transparent")
                 enabled: root.formatHasAlpha
