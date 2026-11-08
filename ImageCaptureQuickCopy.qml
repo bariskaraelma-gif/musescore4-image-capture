@@ -36,10 +36,10 @@ MuseScore {
     id: root
 
     title: "Image Capture – Quick Copy"
-    description: "Copies the selection (or the whole page, margins trimmed) to the clipboard as an image, without a dialog. Assign a shortcut for keyboard use. By Barış Karaelma."
-    version: "1.4.0"
+    description: "For blind and keyboard-only users: copies the selection (or the whole page, margins trimmed) to the clipboard as an image with a keyboard shortcut, without a dialog. Suggested shortcut: Ctrl+Alt+C. By Barış Karaelma."
+    version: "1.4.1"
     pluginType: "dialog"
-    thumbnailName: "image_capture.png"
+    thumbnailName: "image_capture_quick.png"
     requiresScore: true
 
     implicitWidth: 420

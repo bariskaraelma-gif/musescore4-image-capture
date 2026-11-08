@@ -55,7 +55,7 @@ MuseScore {
 
     title: "Image Capture for MuseScore 4"
     description: "Brings back MuseScore 3's Image Capture: save any region of the score as PNG, JPEG, TIFF, SVG or PDF, or copy it to the clipboard. By Barış Karaelma."
-    version: "1.4.0"
+    version: "1.4.1"
     pluginType: "dialog"
     thumbnailName: "image_capture.png"
     requiresScore: true

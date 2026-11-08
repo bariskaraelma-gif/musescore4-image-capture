@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1 — 2026-11-09
+
+- Quick Copy has its own icon: the camera with a braille cell (dots 1-4-5, an eighth-note C in braille music, like the note in the lens), on a violet background so the two plugins are easy to tell apart.
+- Quick Copy's description says who it is for and suggests the shortcut Ctrl+Alt+C. A plugin cannot set its own shortcut; the README explains how to assign it.
+
 ## 1.4.0 — 2026-11-09
 
 Inspired by Marc Sabatella's idea on the musescore.org forum of a dialog-free version for blind musicians:

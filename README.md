@@ -63,7 +63,10 @@ Resolution, margins and **Hide neighbouring bars** are taken from Image Capture'
 
 The plugins then appear directly in the **Plugins** menu. The folder must keep `ImageCaptureCore.js` next to the two `.qml` files: both use it.
 
-**Tip:** Assign a keyboard shortcut in **Edit → Preferences → Shortcuts**: search for "Image Capture". For Quick Copy this is what makes it usable without the mouse.
+**Tip:** Assign a keyboard shortcut in **Edit → Preferences → Shortcuts**: search for "Image Capture". For Quick Copy this is what makes it usable without the mouse; we suggest **Ctrl+Alt+C**. A plugin cannot set its own shortcut, so it has to be assigned once by hand.
+
+- On Windows, Ctrl+Alt counts as AltGr. If AltGr+C types a character on your keyboard layout (e.g. "ć" on a Polish keyboard), choose another shortcut.
+- MuseScore remembers the shortcut by the plugin's folder name. If you rename the folder, assign it again.
 
 ## Usage
 
@@ -159,7 +162,10 @@ v1.4'ten itibaren ikinci bir eklenti de var: **Image Capture – Quick Copy**. S
 
 Klasörde iki `.qml` dosyasının yanında `ImageCaptureCore.js` de bulunmalı; ikisi de onu kullanır.
 
-**İpucu:** **Düzen → Tercihler → Kısayollar** bölümünde "Image Capture" diye aratıp bir klavye kısayolu atayabilirsiniz. Quick Copy'yi faresiz kullanmak için bu gerekli.
+**İpucu:** **Düzen → Tercihler → Kısayollar** bölümünde "Image Capture" diye aratıp bir klavye kısayolu atayabilirsiniz. Quick Copy'yi faresiz kullanmak için bu gerekli; önerimiz **Ctrl+Alt+C**. Eklenti kendi kısayolunu atayamıyor, bir kez elle atanması gerekiyor.
+
+- Windows'ta Ctrl+Alt, AltGr sayılır. Klavye düzeninizde AltGr+C bir harf yazıyorsa (ör. Lehçe klavyede "ć") başka bir kısayol seçin.
+- MuseScore kısayolu eklenti klasörünün adıyla hatırlar. Klasörün adını değiştirirseniz kısayolu yeniden atayın.
 
 ### Kullanım
 
