@@ -32,6 +32,8 @@ Since v1.4 it comes with a second plugin, **Image Capture – Quick Copy**, whic
 
 ### Quick Copy (no dialog)
 
+![Quick Copy in Plugins → Manage plugins, with its shortcut](docs/quick-copy.png)
+
 Run **Image Capture – Quick Copy** from its keyboard shortcut (or the Plugins menu). A small window says "Copying to the clipboard..." and closes by itself; on an error it stays open with a **Close** button (Esc also closes it).
 
 - **Range selection:** the selected bars, with everything that belongs to them (clefs, lyrics, dynamics, rehearsal marks...). Neighbouring bars are hidden as with **Hide neighbouring bars**.
@@ -144,6 +146,8 @@ v1.4'ten itibaren ikinci bir eklenti de var: **Image Capture – Quick Copy**. S
 - **Diller:** English, Türkçe, Deutsch, Français, Español, Português. MuseScore'un arayüz dilini izler.
 
 ### Hızlı Kopyala (Quick Copy, pencere açmadan)
+
+![Eklentileri yönet ekranında Quick Copy ve kısayolu](docs/quick-copy.png)
 
 **Image Capture – Quick Copy**'yi klavye kısayoluyla (ya da Eklentiler menüsünden) çalıştırın. Küçük bir pencere "Panoya kopyalanıyor..." der ve iş bitince kendiliğinden kapanır; hata olursa **Kapat** düğmesiyle açık kalır (Esc de kapatır).
 
